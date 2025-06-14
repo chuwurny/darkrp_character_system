@@ -12,6 +12,10 @@ functionality by adding characters.
 
 - [ ] Fully functional example implementation of this base
 
+## 📜 Documentation
+
+- [Configuration](./CONFIGURATION.md)
+
 ## 🚀 Quick start
 
 1. Install this addon into your `addons` directory.
