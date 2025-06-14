@@ -1,0 +1,5 @@
+DarkRP.registerDarkRPVar("CharacterID", function(v)
+    net.WriteUInt(v, 32)
+end, function()
+    return net.ReadUInt(32)
+end)
