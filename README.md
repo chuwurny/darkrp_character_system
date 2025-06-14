@@ -3,11 +3,14 @@
 This is addon for [DarkRP](https://github.com/FPtje/DarkRP) that extends
 functionality by adding characters.
 
-This module provides a **base** for your character system. This addon doesn't
-add new UI, doesn't provide any extra features, it's a **solid base**.
-
 > [!WARNING]
-> This
+>
+> This module provides a **base** for your character system. This addon doesn't
+> add new UI, doesn't provide any extra features, it's a **solid base**.
+
+## TODO
+
+- [ ] Fully functional example implementation of this base
 
 ## 🚀 Quick start
 
@@ -149,6 +152,12 @@ DarkRP.Characters.CreateFieldSimple({
     -- (optional) Makes this field be set only by server. See "Banned" field
     -- below.
     --SetByServer = true
+
+    -- (optional) Called in "CharacterPreSpawn" hook. Apply your variable here!
+    Apply = function(ply, color)
+        -- Apply color to the player
+        ply:SetPlayerColor(color)
+    end,
 })
 
 DarkRP.Characters.CreateFieldSimple({
