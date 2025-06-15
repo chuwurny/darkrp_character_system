@@ -34,7 +34,10 @@ DarkRP.Characters = DarkRP.Characters or {}
 --- via `PLAYER:getDarkRPVar` and `PLAYER:setDarkRPVar`
 ---@field DarkRPVar DarkRP.Characters.SimpleField.DarkRPVar?
 ---
---- Creates `PLAYER:SetCharacter<Name>` function
+--- Creates `PLAYER:SetCharacter<Name>` function that has following syntax:
+--- `fun(self: Player, value: any, ...: any): boolean, string?`
+--- First return value is the "success" of the function. If `false`, then
+--- second argument *can* be an error explaining what did go wrong.
 ---@field MetaWrapper boolean|DarkRP.Characters.SimpleField.MetaWrapper?
 
 --- Wrapper to create field in character
