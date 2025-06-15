@@ -4,11 +4,11 @@ DarkRP.Characters = DarkRP.Characters or {}
 --- Type that shares fields among "SharedData" and "PrivateData"
 ---@see DarkRP.Character.SharedData
 ---@see DarkRP.Character.PrivateData
----@class DarkRP.CharacterInfo.Data
+---@class DarkRP.Character.Data
 
----@class DarkRP.Character.SharedData : DarkRP.CharacterInfo.Data
+---@class DarkRP.Character.SharedData : DarkRP.Character.Data
 
----@class DarkRP.Character.PrivateData : DarkRP.CharacterInfo.Data
+---@class DarkRP.Character.PrivateData : DarkRP.Character.Data
 --- (Default internal field) Saved weapons
 ---@field Weapons { [string]: { Clip1: integer } }
 ---
