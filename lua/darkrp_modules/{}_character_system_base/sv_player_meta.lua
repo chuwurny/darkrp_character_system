@@ -32,6 +32,9 @@ function PLAYER:CreateCharacter(info, callback)
     local char = DarkRP.Characters.New(self)
     char.Name = info.Name
 
+    -- hypothetically speaking character is just being born :trollface:
+    char.Dead = true
+
     hook.Run("CreatePlayerCharacter", char, info)
     hook.Run("PlayerCreatedCharacter", char)
 
@@ -63,6 +66,7 @@ function PLAYER:LoadCharacters(callback)
                   name,
                   last_access_time,
                   health, armor,
+                  dead,
                   data,
                   darkrp_chars_pos.pos_x,
                   darkrp_chars_pos.pos_y,
@@ -106,6 +110,8 @@ function PLAYER:LoadCharacters(callback)
 
                     char.Armor = tonumber(cols.armor) --[[@as integer]]
                     char.Health = tonumber(cols.health) --[[@as integer]]
+
+                    char.Dead = cols.dead == "1"
 
                     char.LastAccessTime = tonumber(cols.last_access_time) --[[@as integer]]
 
@@ -269,5 +275,5 @@ function PLAYER:SetCharacterName(newName)
 
     self:setDarkRPVar("rpname", newName)
     self:GetCharacter().Name = newName
-    self:GetCharacter():Sync()
+    self:GetCharacter():Sync("info")
 end

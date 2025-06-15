@@ -14,15 +14,31 @@ function CHARACTER:EnsureInDatabase()
 end
 
 --- Fully synchronizes character with creator
-function CHARACTER:Sync()
+---@param fields ("all"|"info"|"data")? Default: "all"
+function CHARACTER:Sync(fields)
     net.Start("DarkRPSyncCharacter")
 
+    local syncAll = not fields or fields == "all"
+    local syncInfo = syncAll or fields == "info"
+    local syncData = syncAll or fields == "data"
+
     net.WriteUInt(self.ID, 32)
-    net.WriteString(self.Name)
-    net.WriteUInt(self.LastAccessTime, 32)
-    net.WriteUInt(self.Health, 32)
-    net.WriteUInt(self.Armor, 32)
-    net.WriteTable(self.SharedData)
+
+    net.WriteBool(syncInfo)
+
+    if syncInfo then
+        net.WriteString(self.Name)
+        net.WriteUInt(self.LastAccessTime, 32)
+        net.WriteUInt(self.Health, 32)
+        net.WriteUInt(self.Armor, 32)
+        net.WriteBool(self.Dead)
+    end
+
+    net.WriteBool(syncData)
+
+    if syncData then
+        net.WriteTable(self.SharedData)
+    end
 
     net.Send(self.Player)
 end
@@ -88,13 +104,18 @@ function CHARACTER:Save(callback)
         self.Pos = self.Player:GetPos()
         self.Health = self.Player:Health()
         self.Armor = self.Player:Armor()
+        self.Dead = false
     else
         self.Pos = nil
         self.Health = self.Player:GetMaxHealth()
         self.Armor = self.Player:GetMaxArmor()
+        self.Dead = true
     end
 
-    do
+    if self.Dead then
+        self.PrivateData.Weapons = {}
+        self.PrivateData.Ammo = {}
+    else
         local weapons = {}
         local ammo = {}
 
@@ -122,13 +143,14 @@ function CHARACTER:Save(callback)
         MySQLite.query(
             string.format(
                 [[INSERT INTO darkrp_characters
-                      (steamid, name, health, armor, data)
-                      VALUES(%s, %s, %d, %d, %s);
+                      (steamid, name, health, armor, dead, data)
+                      VALUES(%s, %s, %d, %d, %d, %s);
                   SELECT LAST_INSERT_ROWID() AS id;]],
                 MySQLite.SQLStr(self.Player:SteamID()),
                 MySQLite.SQLStr(self.Name),
                 self.Health,
                 self.Armor,
+                self.Dead and 1 or 0,
                 MySQLite.SQLStr(util.TableToJSON({
                     PrivateData = self.PrivateData,
                 }))
@@ -162,11 +184,13 @@ function CHARACTER:Save(callback)
                 [[UPDATE darkrp_characters
                   SET name = %s,
                       health = %d, armor = %d,
+                      dead = %d,
                       data = %s
                   WHERE id = %d]],
                 MySQLite.SQLStr(self.Name),
                 self.Health,
                 self.Armor,
+                self.Dead and 1 or 0,
                 MySQLite.SQLStr(util.TableToJSON({
                     PrivateData = self.PrivateData,
                 })),

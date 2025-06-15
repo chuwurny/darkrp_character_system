@@ -34,6 +34,7 @@ function DarkRP.Characters.New(ply)
         LastAccessTime = 0,
         Health = ply:GetMaxHealth(),
         Armor = 0,
+        Dead = false,
         Pos = nil,
         SharedData = {},
         PrivateData = {},

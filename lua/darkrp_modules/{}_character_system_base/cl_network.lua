@@ -1,12 +1,35 @@
 net.Receive("DarkRPSyncCharacter", function()
-    local char = DarkRP.Characters.New(LocalPlayer())
+    local id = net.ReadUInt(32)
 
-    char.ID = net.ReadUInt(32)
-    char.Name = net.ReadString()
-    char.LastAccessTime = net.ReadUInt(32)
-    char.Health = net.ReadUInt(32)
-    char.Armor = net.ReadUInt(32)
-    char.SharedData = net.ReadTable()
+    local hasSyncedBefore = DarkRP.Characters.Loaded[id] ~= nil
+
+    local char = DarkRP.Characters.Loaded[id]
+        or DarkRP.Characters.New(LocalPlayer())
+    char.ID = id
+
+    local syncInfo = net.ReadBool()
+
+    if syncInfo then
+        char.Name = net.ReadString()
+        char.LastAccessTime = net.ReadUInt(32)
+        char.Health = net.ReadUInt(32)
+        char.Armor = net.ReadUInt(32)
+        char.Dead = net.ReadBool()
+    end
+
+    local syncData = net.ReadBool()
+
+    if syncData then
+        char.SharedData = net.ReadTable()
+    end
+
+    if not hasSyncedBefore and not syncInfo and not syncData then
+        ErrorNoHalt(
+            "Horrible error! Got character "
+                .. tostring(char)
+                .. " first time but it has not sent all fields!"
+        )
+    end
 
     DarkRP.Characters.Loaded[char.ID] = char
 

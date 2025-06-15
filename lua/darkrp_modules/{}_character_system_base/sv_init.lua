@@ -1,4 +1,31 @@
+DarkRP.Characters.DATABASE_VERSION = 2
+
+local MIGRATE_VERSION = {
+    -- Add "dead" column
+    [2] = function(next)
+        MySQLite.query(
+            string.format(
+                "ALTER TABLE darkrp_characters ADD dead %s NOT NULL DEFAULT 0",
+
+                MySQLite.isMySQL() and "ENUM(0, 1)"
+                    or "INTEGER CHECK(dead IN (0, 1))"
+            ),
+            next,
+            DarkRP.Characters._TraceAsyncError()
+        )
+    end,
+}
+
 hook.Add("DatabaseInitialized", "DarkRPCharacters_InitDB", function()
+    MySQLite.query(
+        [[CREATE TABLE IF NOT EXISTS darkrp_chars_db_state(
+            var VARCHAR(32) NOT NULL PRIMARY KEY,
+            value TEXT NOT NULL
+        )]],
+        nil,
+        DarkRP.Characters._TraceAsyncError()
+    )
+
     MySQLite.query(
         [[CREATE TABLE IF NOT EXISTS darkrp_characters(
             id INTEGER NOT NULL PRIMARY KEY,
@@ -25,6 +52,41 @@ hook.Add("DatabaseInitialized", "DarkRPCharacters_InitDB", function()
         )]],
         nil,
         DarkRP.Characters._TraceAsyncError()
+    )
+
+    -- migrate
+    MySQLite.query(
+        "SELECT value FROM darkrp_chars_db_state WHERE var = 'version' LIMIT 1",
+        function(rows)
+            local version
+
+            if not rows then
+                version = 1
+            else
+                version = tonumber(rows[1].value) or 1
+            end
+
+            MySQLite.query(
+                string.format(
+                    "REPLACE INTO darkrp_chars_db_state VALUES('version', %d)",
+                    DarkRP.Characters.DATABASE_VERSION
+                ),
+                nil,
+                DarkRP.Characters._TraceAsyncError()
+            )
+
+            local function migrateNext()
+                version = version + 1
+
+                if version > DarkRP.Characters.DATABASE_VERSION then
+                    return
+                end
+
+                MIGRATE_VERSION[version](migrateNext)
+            end
+
+            migrateNext()
+        end
     )
 end)
 
@@ -95,23 +157,28 @@ local function overridePlayerSpawn()
                 ply:SetArmor(ar)
             end
 
-            ply:RemoveAllItems()
+            if not char.Dead then
+                ply:RemoveAllItems()
 
-            if char.PrivateData.Weapons then
-                for class, info in pairs(char.PrivateData.Weapons) do
-                    local weapon = ply:Give(class, true)
+                if char.PrivateData.Weapons then
+                    for class, info in pairs(char.PrivateData.Weapons) do
+                        local weapon = ply:Give(class, true)
 
-                    if IsValid(weapon) then
-                        weapon:SetClip1(info.Clip1)
+                        if IsValid(weapon) then
+                            weapon:SetClip1(info.Clip1)
+                        end
+                    end
+                end
+
+                if char.PrivateData.Ammo then
+                    for type, amount in pairs(char.PrivateData.Ammo) do
+                        ply:SetAmmo(amount, type)
                     end
                 end
             end
 
-            if char.PrivateData.Ammo then
-                for type, amount in pairs(char.PrivateData.Ammo) do
-                    ply:SetAmmo(amount, type)
-                end
-            end
+            char.Dead = false
+            char:Sync("info")
 
             hook.Run("CharacterPreSpawn", char)
             hook.Run("CharacterSpawn", char)
