@@ -21,8 +21,10 @@ function DarkRP.Characters.ToCharacter(v)
     end
 end
 
---- Creates a new character, but doesn't store it in any way. For internal usage
---- only!
+--- Creates a new character, but doesn't store it in any way
+---
+--- WARN: For internal usage only!
+---
 ---@param ply Player
 ---@return DarkRP.Character
 function DarkRP.Characters.New(ply)

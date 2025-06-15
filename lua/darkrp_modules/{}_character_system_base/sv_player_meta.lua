@@ -1,6 +1,16 @@
 ---@class Player
 local PLAYER = FindMetaTable("Player")
 
+--- Creates new character by provided @info.
+---
+--- Hook "PlayerCanEnterCharacter" is called before creating character.
+---
+--- After character is created hook "PlayerCreatedCharacter" is raised. After
+--- this hook character is being saved and synced between this player.
+---
+--- Use hook "CreatePlayerCharacter" to modify new character before passing it
+--- into "PlayerCreatedCharacter" hook.
+---
 ---@param info DarkRP.CharacterInfo
 ---@param callback fun(err: string?, char: DarkRP.Character?)
 function PLAYER:CreateCharacter(info, callback)
@@ -31,6 +41,18 @@ function PLAYER:CreateCharacter(info, callback)
     end)
 end
 
+--- Loads all characters from database.
+---
+--- WARN: you shouldn't use it unless you know what you're doing. See
+--- `PLAYER:FindLoadedCharacters` to find all loaded characters.
+---@see Player.FindLoadedCharacters
+---
+--- When loading characters hook "CharacterLoad" will be called to restore data
+--- from database (`CHARACTER.PrivateData`). After this hook "CharacterLoaded"
+--- is called and character is synchronized with this player.
+---
+--- NOTE: `DarkRP.Characters.Loaded` is modified on hook "CharacterLoaded"!
+---
 ---@param callback fun(chars: DarkRP.CharacterInfo[])
 function PLAYER:LoadCharacters(callback)
     MySQLite.query(
@@ -130,6 +152,46 @@ end
 ---@class Player
 ---@field _EnteredCharacter boolean?
 
+--- Enters a character. If player is already playing some character error will
+--- be thrown. Leave character before calling this function!
+---@see Player.IsEnteredCharacter
+---@see Player.LeaveCharacter
+---
+--- Hook "PlayerCanCreateCharacter" is called when trying to enter this
+--- function. If hook return `false` then its results will be passed as return
+--- values.
+---
+--- After granted permission to enter character, DarkRP variables "CharacterID",
+--- "rpname" will be modified. Following things will happen in specified order:
+---
+--- 1. Hook "CharacterRestore" is called when player is allowed to enter character.
+--- Modify player in this hook!
+---
+--- 2. Hook "PlayerEnteredCharacter" is called after "CharacterRestore".
+--- Character is ready to be used!
+---
+--- 3. `PLAYER:Spawn` is forcefully called with modified behavior. E.g. hooks
+--- like "PlayerSpawn" will be called here!
+---
+--- 4. Hook "CharacterPrepareToSpawn" is called before running default
+--- gamemode's `GM:PlayerSpawn` behavior.
+---
+--- 5. Hook "CharacterOverrideSpawnPos" is called which allows to override
+--- player's spawn position.
+---
+--- 6. Hook "CharacterOverrideHealth" is called which allows to override
+--- player's health.
+---
+--- 7. Hook "CharacterOverrideArmor" is called which allows to override
+--- player's armor.
+---
+--- 8. Player's items (weapons, ammo) will be stripped and saved weapons & ammo
+--- amount from character will be loaded.
+---
+--- 9. Hook "CharacterPreSpawn" is called. Modify player here!
+---
+--- 10. Hook "CharacterSpawn" is called. Player is ready!
+---
 ---@param char DarkRP.MaybeCharacter
 ---@return boolean success
 ---@return string? err
@@ -160,6 +222,20 @@ function PLAYER:EnterCharacter(char)
     return true
 end
 
+--- Leaves character. If player is not entered character error will be thrown.
+---@see Player.IsEnteredCharacter
+---
+--- Hook "PlayerCanLeaveCharacter" will be called which allows to prevent player
+--- from leaving character. Useful when player is handcuffed and trying to leave
+--- character! If hook returns `false` then this function will return `false`.
+---
+--- After this hook character will be saved and synced. "CharacterID" DarkRP
+--- variable will be
+--- set to `nil` and `PLAYER:KillSilent` will be called.
+---
+--- In the end hook "PlayerLeftCharacter" will be called and `true` will be
+--- returned.
+---
 ---@return boolean
 function PLAYER:LeaveCharacter()
     assert(
@@ -185,6 +261,7 @@ function PLAYER:LeaveCharacter()
     return true
 end
 
+--- Helper function to modify rp name and sync it with player.
 ---@param newName string
 function PLAYER:SetCharacterName(newName)
     assert(self:IsEnteredCharacter(), "Enter character first")

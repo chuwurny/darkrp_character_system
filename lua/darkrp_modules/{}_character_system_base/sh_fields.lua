@@ -2,18 +2,29 @@
 DarkRP.Characters = DarkRP.Characters or {}
 
 ---@class DarkRP.Characters.SimpleField.DarkRPVar
----@field Name string?
----@field WriteFn fun(v: any)
----@field ReadFn fun(): any
+---@field Name string? Variable name
+---@field WriteFn fun(v: any) Write function
+---@field ReadFn fun(): any Read function
 
 ---@class DarkRP.Characters.SimpleField
----@field Name string
+---@field Name string Field name
+---
+--- If `true` then field cannot be retrived from client in any way
 ---@field SetByServer boolean?
 ---@field ValidateFn (fun(v: any, info: DarkRP.CharacterInfo): (boolean|string|nil))?
+---
+--- Called in "CharacterPreSpawn". Apply any changes to player here
 ---@field Apply fun(ply: Player, v: any)?
+---
+--- If `true` then field will be shared with character's assigned player
+---@see DarkRP.Character.SharedData
 ---@field SharedData boolean?
+---
+--- If `true` then it will register a new DarkRP variable that can be accessed
+--- via `PLAYER:getDarkRPVar` and `PLAYER:setDarkRPVar`
 ---@field DarkRPVar DarkRP.Characters.SimpleField.DarkRPVar?
 
+--- Wrapper to create field in character
 ---@param field DarkRP.Characters.SimpleField
 function DarkRP.Characters.CreateFieldSimple(field)
     local hookID = "DarkRPCharacters_SimpleField" .. field.Name

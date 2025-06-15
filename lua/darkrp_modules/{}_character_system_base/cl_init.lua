@@ -1,6 +1,9 @@
 ---@class DarkRP.Characters
 DarkRP.Characters = DarkRP.Characters or {}
 
+--- Sends character create request
+---@see Player.CreateCharacter
+---
 ---@param charInfo DarkRP.CharacterInfo
 ---@param callback fun(err: string?)?
 function DarkRP.Characters.SendCreateRequest(charInfo, callback)
@@ -19,6 +22,9 @@ function DarkRP.Characters.SendCreateRequest(charInfo, callback)
     end
 end
 
+--- Sends character enter request
+---@see Player.EnterCharacter
+---
 ---@param char DarkRP.MaybeCharacter
 ---@param callback fun(err: string?)?
 function DarkRP.Characters.SendEnterRequest(char, callback)
@@ -39,6 +45,9 @@ function DarkRP.Characters.SendEnterRequest(char, callback)
     end
 end
 
+--- Sends character delete request
+---@see DarkRP.Character.Delete
+---
 ---@param char DarkRP.MaybeCharacter
 ---@param callback fun(err: string?)?
 function DarkRP.Characters.SendDeleteRequest(char, callback)
@@ -59,6 +68,8 @@ function DarkRP.Characters.SendDeleteRequest(char, callback)
     end
 end
 
+--- Sends character leave request
+---@see Player.LeaveCharacter
 function DarkRP.Characters.SendLeaveRequest()
     net.Start("DarkRPLeaveCharacter")
     net.SendToServer()

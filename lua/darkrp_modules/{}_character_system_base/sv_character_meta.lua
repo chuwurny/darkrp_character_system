@@ -231,6 +231,12 @@ end
 ---
 --- If @addToPrivateData is not true, then this value become temporary (aka
 --- shared), and will not be saved into the database.
+---@see DarkRP.Character.SharedData
+---
+--- If you want to save data without sharing with player, check out
+--- `CHARACTER.PrivateData`
+---@see DarkRP.Character.PrivateData
+---
 ---@param key any
 ---@param value any
 ---@param addToPrivateData boolean?
