@@ -34,7 +34,7 @@ net.Receive("DarkRPSyncCharacter", function()
     DarkRP.Characters.Loaded[char.ID] = char
 
     if cvars.Bool("developer") then
-        print("Synced char " .. char.ID)
+        print("Synced char " .. tostring(char))
     end
 
     hook.Run("CharacterSync", char, char.SharedData)
@@ -54,8 +54,8 @@ net.Receive("DarkRPSyncCharacterData", function()
     if cvars.Bool("developer") then
         print(
             string.format(
-                "Synced char %d data: %s = %s",
-                char.ID,
+                "Synced char %s data: %s = %s",
+                char,
                 tostring(key),
                 tostring(value)
             )

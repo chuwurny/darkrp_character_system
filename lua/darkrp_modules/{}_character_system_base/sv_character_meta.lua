@@ -74,7 +74,7 @@ function CHARACTER:DeletePos(callback)
     self:EnsureInDatabase()
 
     if cvars.Bool("developer") then
-        print(string.format("Deleting character %d last pos", self.ID))
+        print(string.format("Deleting character's %s last pos", self))
     end
 
     self.Pos = nil

@@ -71,7 +71,13 @@ net.Receive("DarkRPEnterCharacter", function(_, ply)
         if err then
             ErrorNoHalt(string.format("%s failed to enter char: %s", ply, err))
         else
-            print(string.format("%s entered char %d", ply, charID))
+            print(
+                string.format(
+                    "%s entered char %s",
+                    ply,
+                    DarkRP.Characters.Loaded[charID]
+                )
+            )
         end
     end
 
