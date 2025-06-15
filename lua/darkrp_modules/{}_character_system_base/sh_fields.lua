@@ -29,6 +29,14 @@ DarkRP.Characters = DarkRP.Characters or {}
 function DarkRP.Characters.CreateFieldSimple(field)
     local hookID = "DarkRPCharacters_SimpleField" .. field.Name
 
+    --- preprocess field
+    do
+        if field.DarkRPVar then
+            field.DarkRPVar.Name = field.DarkRPVar.Name
+                or ("char_" .. field.Name)
+        end
+    end
+
     if SERVER then
         if field.ValidateFn then
             ---@param info DarkRP.CharacterInfo
@@ -74,6 +82,11 @@ function DarkRP.Characters.CreateFieldSimple(field)
         ---@param char DarkRP.Character
         ---@param private table
         hook.Add("CharacterSave", hookID, function(char, _, private)
+            if field.DarkRPVar and char:IsActive() then
+                private[field.Name] =
+                    char.Player:getDarkRPVar(field.DarkRPVar.Name)
+            end
+
             private[field.Name] = char[field.Name]
         end)
 
@@ -85,6 +98,13 @@ function DarkRP.Characters.CreateFieldSimple(field)
 
             if field.SharedData then
                 shared[field.Name] = private[field.Name]
+            end
+
+            if field.DarkRPVar then
+                char.Player:setDarkRPVar(
+                    field.DarkRPVar.Name,
+                    private[field.Name]
+                )
             end
         end)
     else -- CLIENT
@@ -107,17 +127,15 @@ function DarkRP.Characters.CreateFieldSimple(field)
     end
 
     if field.DarkRPVar then
-        local varName = field.DarkRPVar.Name or ("char_" .. field.Name)
-
         DarkRP.registerDarkRPVar(
-            varName,
+            field.DarkRPVar.Name,
             field.DarkRPVar.WriteFn,
             field.DarkRPVar.ReadFn
         )
 
         if SERVER then
             hook.Add("CharacterRestore", hookID, function(char)
-                char.Player:setDarkRPVar(varName, char[field.Name])
+                char.Player:setDarkRPVar(field.DarkRPVar.Name, char[field.Name])
             end)
         end
     end
