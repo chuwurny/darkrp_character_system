@@ -41,15 +41,18 @@ hook.Add("DatabaseInitialized", "DarkRPCharacters_InitDB", function()
     )
 
     MySQLite.query(
-        [[CREATE TABLE IF NOT EXISTS darkrp_chars_pos(
-            char_id INTEGER NOT NULL,
-            map VARCHAR(128) NOT NULL,
-            pos_x FLOAT NOT NULL,
-            pos_y FLOAT NOT NULL,
-            pos_z FLOAT NOT NULL,
-
-            UNIQUE(map, char_id)
-        )]],
+        string.format(
+            [[CREATE TABLE IF NOT EXISTS darkrp_chars_pos(
+                char_id INTEGER NOT NULL,
+                map VARCHAR(128) NOT NULL,
+                pos_x FLOAT NOT NULL,
+                pos_y FLOAT NOT NULL,
+                pos_z FLOAT NOT NULL,
+                %s
+            )]],
+            MySQLite.isMySQL() and "UNIQUE map_char_id (map, char_id)"
+                or "UNIQUE(map, char_id)"
+        ),
         nil,
         DarkRP.Characters._TraceAsyncError()
     )
