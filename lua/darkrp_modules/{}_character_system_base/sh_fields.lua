@@ -86,6 +86,10 @@ function DarkRP.Characters.CreateFieldSimple(field)
 
             char[field.Name] = info[field.Name]
             char.PrivateData[field.Name] = info[field.Name]
+
+            if field.SharedData then
+                char.SharedData[field.Name] = info[field.Name]
+            end
         end)
 
         if field.Apply then
