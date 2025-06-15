@@ -33,6 +33,7 @@ function PLAYER:CreateCharacter(info, callback)
     char.Name = info.Name
 
     hook.Run("CreatePlayerCharacter", char, info)
+    hook.Run("PlayerCreatedCharacter", char)
 
     char:Save(function()
         char:Sync()
