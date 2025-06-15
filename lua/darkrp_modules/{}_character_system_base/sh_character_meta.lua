@@ -39,6 +39,15 @@ DarkRP.Characters.CHARACTER = DarkRP.Characters.CHARACTER or {}
 local CHARACTER = DarkRP.Characters.CHARACTER
 CHARACTER.__index = CHARACTER
 
+function CHARACTER:__tostring()
+    return string.format(
+        "Char(%s)[%s,%s]",
+        self.Name,
+        self.ID or "invalid",
+        tostring(self.Player)
+    )
+end
+
 --- Returns `true` if character has ID (is in database) and `CHARACTER.Player`
 --- is valid
 ---@return boolean
