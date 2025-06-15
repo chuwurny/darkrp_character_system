@@ -66,7 +66,7 @@ local function overridePlayerSpawn()
         if ply._EnteredCharacter then
             char = ply:GetCharacter()
 
-            hook.Run("CharacterPreSpawn", char)
+            hook.Run("CharacterPrepareToSpawn", char)
         end
 
         self:_CharSys_oPlayerSpawn(ply)
