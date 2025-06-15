@@ -6,11 +6,21 @@ DarkRP.Characters = DarkRP.Characters or {}
 ---@field WriteFn fun(v: any) Write function
 ---@field ReadFn fun(): any Read function
 
+---@class DarkRP.Characters.SimpleField.MetaWrapper
+---@field FnName string? Overrides meta function name
+---
+--- Place custom logic here. Can return success or `false` with reason why this
+--- value is invalid.
+---@field OnCall (fun(char: DarkRP.Character, value: any, ...: any): boolean?, string?)?
+
 ---@class DarkRP.Characters.SimpleField
 ---@field Name string Field name
 ---
 --- If `true` then field cannot be retrived from client in any way
 ---@field SetByServer boolean?
+---
+--- Validation function. Used when creating player character and in
+--- `MetaWrapper` to check input value
 ---@field ValidateFn (fun(v: any, info: DarkRP.CharacterInfo): (boolean|string|nil))?
 ---
 --- Called in "CharacterPreSpawn". Apply any changes to player here
@@ -23,6 +33,9 @@ DarkRP.Characters = DarkRP.Characters or {}
 --- If `true` then it will register a new DarkRP variable that can be accessed
 --- via `PLAYER:getDarkRPVar` and `PLAYER:setDarkRPVar`
 ---@field DarkRPVar DarkRP.Characters.SimpleField.DarkRPVar?
+---
+--- Creates `PLAYER:SetCharacter<Name>` function
+---@field MetaWrapper boolean|DarkRP.Characters.SimpleField.MetaWrapper?
 
 --- Wrapper to create field in character
 ---@param field DarkRP.Characters.SimpleField
@@ -107,6 +120,51 @@ function DarkRP.Characters.CreateFieldSimple(field)
                 )
             end
         end)
+
+        if field.MetaWrapper then
+            local fnName = "SetCharacter" .. field.Name
+            local onCall
+
+            if type(field.MetaWrapper) == "table" then
+                fnName = field.MetaWrapper.FnName or fnName
+                onCall = field.MetaWrapper.OnCall
+            end
+
+            local PLAYER = FindMetaTable("Player")
+
+            ---@param ply Player
+            ---@param value any
+            ---@return boolean success
+            ---@return string? err
+            PLAYER[fnName] = function(ply, value, ...)
+                local success, err
+                local char = ply:GetCharacter()
+
+                if field.ValidateFn then
+                    success, err = field.ValidateFn(value, char)
+                end
+
+                if success ~= false and onCall then
+                    success, err = onCall(char, value, ...)
+                end
+
+                if success ~= false then
+                    char[field.Name] = value
+
+                    if field.SharedData then
+                        char:SetData(field.Name, value, true)
+                    else
+                        char.PrivateData[field.Name] = value
+                    end
+
+                    if field.DarkRPVar then
+                        ply:setDarkRPVar(field.DarkRPVar.Name, value)
+                    end
+                end
+
+                return success ~= false, err
+            end
+        end
     else -- CLIENT
         if field.SharedData then
             ---@param char DarkRP.Character
