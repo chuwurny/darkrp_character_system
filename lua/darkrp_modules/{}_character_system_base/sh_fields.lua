@@ -141,7 +141,14 @@ function DarkRP.Characters.CreateFieldSimple(field)
                 local char = ply:GetCharacter()
 
                 if field.ValidateFn then
-                    success, err = field.ValidateFn(value, char)
+                    local status = field.ValidateFn(value, char)
+
+                    if type(status) == "string" then
+                        success = false
+                        err = status
+                    elseif status == false then
+                        success = false
+                    end
                 end
 
                 if success ~= false and onCall then
