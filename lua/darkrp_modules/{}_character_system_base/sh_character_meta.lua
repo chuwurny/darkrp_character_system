@@ -10,10 +10,10 @@ DarkRP.Characters = DarkRP.Characters or {}
 
 ---@class DarkRP.Character.PrivateData : DarkRP.Character.Data
 --- (Default internal field) Saved weapons
----@field Weapons { [string]: { Clip1: integer } }
+---@field Weapons { [string]: { Clip1: integer } }?
 ---
 --- (Default internal field) Saved ammo
----@field Ammo { [integer]: integer }
+---@field Ammo { [integer]: integer }?
 
 ---@class DarkRP.CharacterInfo
 ---@field Name string Last saved character rp name
