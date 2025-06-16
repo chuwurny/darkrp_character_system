@@ -100,7 +100,7 @@ function DarkRP.Characters.CreateFieldSimple(field)
         end
 
         ---@param char DarkRP.Character
-        ---@param private table
+        ---@param private DarkRP.Character.PrivateData
         hook.Add("CharacterSave", hookID, function(char, _, private)
             if field.DarkRPVar and char:IsActive() then
                 private[field.Name] =
@@ -111,8 +111,8 @@ function DarkRP.Characters.CreateFieldSimple(field)
         end)
 
         ---@param char DarkRP.Character
-        ---@param private table
-        ---@param shared table
+        ---@param private DarkRP.Character.PrivateData
+        ---@param shared DarkRP.Character.SharedData
         hook.Add("CharacterLoad", hookID, function(char, private, shared)
             char[field.Name] = private[field.Name]
 
