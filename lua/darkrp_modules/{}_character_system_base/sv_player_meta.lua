@@ -186,8 +186,9 @@ end
 --- 3. `PLAYER:Spawn` is forcefully called with modified behavior. E.g. hooks
 --- like "PlayerSpawn" will be called here!
 ---
---- 4. Hook "CharacterPrepareToSpawn" is called before running default
---- gamemode's `GM:PlayerSpawn` behavior.
+--- 4. Hook "CharacterPrePlayerSpawn" is called before running default
+--- gamemode's `GM:PlayerSpawn` behavior. After `GM:PlayerSpawn` hook
+--- "CharacterPostPlayerSpawn" is called.
 ---
 --- 5. Hook "CharacterOverrideSpawnPos" is called which allows to override
 --- player's spawn position.
