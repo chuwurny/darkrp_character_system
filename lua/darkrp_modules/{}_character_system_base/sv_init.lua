@@ -166,11 +166,16 @@ local function overridePlayerSpawn()
                 ply:RemoveAllItems()
 
                 if char.PrivateData.Weapons then
-                    for class, info in pairs(char.PrivateData.Weapons) do
-                        local weapon = ply:Give(class, true)
+                    local ignoreWeapons = GAMEMODE.Config.DontSaveCharacterWeapons
+                        or {}
 
-                        if IsValid(weapon) then
-                            weapon:SetClip1(info.Clip1)
+                    for class, info in pairs(char.PrivateData.Weapons) do
+                        if not ignoreWeapons[class] then
+                            local weapon = ply:Give(class, true)
+
+                            if IsValid(weapon) then
+                                weapon:SetClip1(info.Clip1)
+                            end
                         end
                     end
                 end

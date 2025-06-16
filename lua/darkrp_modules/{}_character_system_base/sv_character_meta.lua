@@ -131,20 +131,24 @@ function CHARACTER:Save(callback)
         self.PrivateData.Weapons = {}
         self.PrivateData.Ammo = {}
     else
+        local ignoreWeapons = GAMEMODE.Config.DontSaveCharacterWeapons or {}
+
         local weapons = {}
         local ammo = {}
 
         for _, weapon in ipairs(self.Player:GetWeapons()) do
             ---@cast weapon Weapon
 
-            weapons[weapon:GetClass()] = {
-                Clip1 = weapon:Clip1(),
-            }
+            if not ignoreWeapons[weapon:GetClass()] then
+                weapons[weapon:GetClass()] = {
+                    Clip1 = weapon:Clip1(),
+                }
 
-            local ammoType = weapon:GetPrimaryAmmoType()
+                local ammoType = weapon:GetPrimaryAmmoType()
 
-            if not ammo[ammoType] then
-                ammo[ammoType] = self.Player:GetAmmoCount(ammoType)
+                if not ammo[ammoType] then
+                    ammo[ammoType] = self.Player:GetAmmoCount(ammoType)
+                end
             end
         end
 

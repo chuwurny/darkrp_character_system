@@ -20,4 +20,11 @@ GM.Config.MaxCharacters = 2
 
 -- Max character name length (utf8 friendly)
 GM.Config.CharacterMaxNameLength = 32
+
+-- Weapons that shouldn't be saved
+GM.Config.DontSaveCharacterWeapons = {
+    -- Examples:
+    --["weapon_physgun"] = true,
+    --["weapon_fists"] = true,
+}
 ```
