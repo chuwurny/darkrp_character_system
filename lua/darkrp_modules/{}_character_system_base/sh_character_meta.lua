@@ -27,6 +27,7 @@ DarkRP.Characters = DarkRP.Characters or {}
 ---@field Armor integer Last saved character armor
 ---@field Pos Vector? Last saved character position
 ---@field Dead boolean Last saved character dead state
+---@field Temporary boolean? Makes character temporary and prevents saving
 ---
 --- Data that is shared between assigned player
 ---@field SharedData DarkRP.Character.SharedData

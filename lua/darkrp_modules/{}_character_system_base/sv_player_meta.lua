@@ -13,9 +13,14 @@ local PLAYER = FindMetaTable("Player")
 ---
 ---@param info DarkRP.CharacterInfo
 ---@param callback fun(err: string?, char: DarkRP.Character?)
-function PLAYER:CreateCharacter(info, callback)
+---@param temporary boolean?
+function PLAYER:CreateCharacter(info, callback, temporary)
     ---@diagnostic disable-next-line: undefined-field
-    if #self:FindLoadedCharacters() >= (GAMEMODE.Config.MaxCharacters or 2) then
+    if
+        not temporary
+        and #self:FindLoadedCharacters()
+            >= (GAMEMODE.Config.MaxCharacters or 2)
+    then
         return callback("char_limit", nil)
     end
 
@@ -31,6 +36,7 @@ function PLAYER:CreateCharacter(info, callback)
 
     local char = DarkRP.Characters.New(self)
     char.Name = info.Name
+    char.Temporary = temporary == true
 
     -- hypothetically speaking character is just being born :trollface:
     char.Dead = true

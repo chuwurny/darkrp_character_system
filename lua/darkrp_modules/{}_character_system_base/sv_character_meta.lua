@@ -1,6 +1,9 @@
 ---@class DarkRP.Characters
 DarkRP.Characters = DarkRP.Characters or {}
 
+---@type integer
+DarkRP.Characters.NextTemporaryID = DarkRP.Characters.NextTemporaryID or 0
+
 ---@class DarkRP.Character
 local CHARACTER = DarkRP.Characters.CHARACTER
 CHARACTER.__index = CHARACTER
@@ -48,24 +51,30 @@ end
 function CHARACTER:SavePos(callback)
     self:EnsureInDatabase()
 
-    MySQLite.query(
-        string.format(
-            [[REPLACE INTO darkrp_chars_pos
+    if self.Temporary then
+        if callback then
+            callback(self)
+        end
+    else
+        MySQLite.query(
+            string.format(
+                [[REPLACE INTO darkrp_chars_pos
               (char_id, map, pos_x, pos_y, pos_z)
               VALUES(%d, %s, %d, %d, %d)]],
-            self.ID,
-            MySQLite.SQLStr(game.GetMap()),
-            self.Pos.x,
-            self.Pos.y,
-            self.Pos.z
-        ),
-        function()
-            if callback then
-                callback(self)
-            end
-        end,
-        DarkRP.Characters._TraceAsyncError()
-    )
+                self.ID,
+                MySQLite.SQLStr(game.GetMap()),
+                self.Pos.x,
+                self.Pos.y,
+                self.Pos.z
+            ),
+            function()
+                if callback then
+                    callback(self)
+                end
+            end,
+            DarkRP.Characters._TraceAsyncError()
+        )
+    end
 end
 
 --- Deletes saved player position
@@ -79,18 +88,24 @@ function CHARACTER:DeletePos(callback)
 
     self.Pos = nil
 
-    MySQLite.query(
-        string.format(
-            "DELETE FROM darkrp_chars_pos WHERE char_id = %d",
-            self.ID
-        ),
-        function()
-            if callback then
-                callback(self)
-            end
-        end,
-        DarkRP.Characters._TraceAsyncError()
-    )
+    if self.Temporary then
+        if callback then
+            callback(self)
+        end
+    else
+        MySQLite.query(
+            string.format(
+                "DELETE FROM darkrp_chars_pos WHERE char_id = %d",
+                self.ID
+            ),
+            function()
+                if callback then
+                    callback(self)
+                end
+            end,
+            DarkRP.Characters._TraceAsyncError()
+        )
+    end
 end
 
 --- Saves character into database including position
@@ -140,38 +155,52 @@ function CHARACTER:Save(callback)
     hook.Run("CharacterSave", self, self.SharedData, self.PrivateData)
 
     if not self.ID then
-        MySQLite.query(
-            string.format(
-                [[INSERT INTO darkrp_characters
+        local function insertCallback(rows)
+            local id =
+                assert(tonumber(rows[1].id), "Got non number last row id!")
+
+            self.ID = id
+
+            DarkRP.Characters.Loaded[id] = self
+
+            hook.Run("CharacterLoaded", self)
+            hook.Run("CharacterSaved", self)
+
+            if callback then
+                callback(self)
+            end
+        end
+
+        if self.Temporary then
+            insertCallback({
+                {
+                    id = 4294967295 --[[ MAX_UINT ]]
+                        - DarkRP.Characters.NextTemporaryID,
+                },
+            })
+
+            DarkRP.Characters.NextTemporaryID = DarkRP.Characters.NextTemporaryID
+                + 1
+        else
+            MySQLite.query(
+                string.format(
+                    [[INSERT INTO darkrp_characters
                       (steamid, name, health, armor, dead, data)
                       VALUES(%s, %s, %d, %d, %d, %s);
                   SELECT LAST_INSERT_ROWID() AS id;]],
-                MySQLite.SQLStr(self.Player:SteamID()),
-                MySQLite.SQLStr(self.Name),
-                self.Health,
-                self.Armor,
-                self.Dead and 1 or 0,
-                MySQLite.SQLStr(util.TableToJSON({
-                    PrivateData = self.PrivateData,
-                }))
-            ),
-            function(rows)
-                local id =
-                    assert(tonumber(rows[1].id), "Got non number last row id!")
-
-                self.ID = id
-
-                DarkRP.Characters.Loaded[id] = self
-
-                hook.Run("CharacterLoaded", self)
-                hook.Run("CharacterSaved", self)
-
-                if callback then
-                    callback(self)
-                end
-            end,
-            DarkRP.Characters._TraceAsyncError()
-        )
+                    MySQLite.SQLStr(self.Player:SteamID()),
+                    MySQLite.SQLStr(self.Name),
+                    self.Health,
+                    self.Armor,
+                    self.Dead and 1 or 0,
+                    MySQLite.SQLStr(util.TableToJSON({
+                        PrivateData = self.PrivateData,
+                    }))
+                ),
+                insertCallback,
+                DarkRP.Characters._TraceAsyncError()
+            )
+        end
     else
         if self.Pos then
             self:SavePos()
@@ -179,32 +208,38 @@ function CHARACTER:Save(callback)
             self:DeletePos()
         end
 
-        MySQLite.query(
-            string.format(
-                [[UPDATE darkrp_characters
-                  SET name = %s,
-                      health = %d, armor = %d,
-                      dead = %d,
-                      data = %s
-                  WHERE id = %d]],
-                MySQLite.SQLStr(self.Name),
-                self.Health,
-                self.Armor,
-                self.Dead and 1 or 0,
-                MySQLite.SQLStr(util.TableToJSON({
-                    PrivateData = self.PrivateData,
-                })),
-                self.ID
-            ),
-            function()
-                hook.Run("CharacterSaved", self)
+        local function updateCallback()
+            hook.Run("CharacterSaved", self)
 
-                if callback then
-                    callback(self)
-                end
-            end,
-            DarkRP.Characters._TraceAsyncError()
-        )
+            if callback then
+                callback(self)
+            end
+        end
+
+        if self.Temporary then
+            updateCallback()
+        else
+            MySQLite.query(
+                string.format(
+                    [[UPDATE darkrp_characters
+                      SET name = %s,
+                          health = %d, armor = %d,
+                          dead = %d,
+                          data = %s
+                      WHERE id = %d]],
+                    MySQLite.SQLStr(self.Name),
+                    self.Health,
+                    self.Armor,
+                    self.Dead and 1 or 0,
+                    MySQLite.SQLStr(util.TableToJSON({
+                        PrivateData = self.PrivateData,
+                    })),
+                    self.ID
+                ),
+                updateCallback,
+                DarkRP.Characters._TraceAsyncError()
+            )
+        end
     end
 end
 
@@ -213,21 +248,30 @@ end
 function CHARACTER:Delete(callback)
     self:Unload()
 
-    MySQLite.query(
-        string.format("DELETE FROM darkrp_characters WHERE id = %d", self.ID),
-        function()
-            if IsValid(self.Player) then
-                net.Start("DarkRPDeleteCharacter")
-                net.WriteUInt(self.ID, 32)
-                net.Send(self.Player)
-            end
+    local function deleteCallback()
+        if IsValid(self.Player) then
+            net.Start("DarkRPDeleteCharacter")
+            net.WriteUInt(self.ID, 32)
+            net.Send(self.Player)
+        end
 
-            if callback then
-                callback()
-            end
-        end,
-        DarkRP.Characters._TraceAsyncError()
-    )
+        if callback then
+            callback()
+        end
+    end
+
+    if self.Temporary then
+        deleteCallback()
+    else
+        MySQLite.query(
+            string.format(
+                "DELETE FROM darkrp_characters WHERE id = %d",
+                self.ID
+            ),
+            deleteCallback,
+            DarkRP.Characters._TraceAsyncError()
+        )
+    end
 end
 
 --- Unloads character. Character will become unusable until will be loaded
