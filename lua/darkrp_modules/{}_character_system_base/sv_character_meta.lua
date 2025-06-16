@@ -128,8 +128,8 @@ function CHARACTER:Save(callback)
     end
 
     if self.Dead then
-        self.PrivateData.Weapons = {}
-        self.PrivateData.Ammo = {}
+        self.PrivateData.Weapons = nil
+        self.PrivateData.Ammo = nil
     else
         local ignoreWeapons = GAMEMODE.Config.DontSaveCharacterWeapons or {}
 
