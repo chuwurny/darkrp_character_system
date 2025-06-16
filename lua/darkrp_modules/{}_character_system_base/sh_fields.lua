@@ -119,13 +119,6 @@ function DarkRP.Characters.CreateFieldSimple(field)
             if field.SharedData then
                 shared[field.Name] = private[field.Name]
             end
-
-            if field.DarkRPVar then
-                char.Player:setDarkRPVar(
-                    field.DarkRPVar.Name,
-                    private[field.Name]
-                )
-            end
         end)
 
         if field.MetaWrapper then
