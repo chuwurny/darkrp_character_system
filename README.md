@@ -131,13 +131,13 @@ DarkRP.Characters.CreateFieldSimple({
     DarkRPVar = {
         -- If this field is set then you can access DarkRP var via
         --
-        -- Player:getDarkRPVar("IDN")
+        -- Player:getDarkRPVar("MyColor")
         --
         -- otherwise via
         --
-        -- Player:getDarkRPVar("char_IDN")
+        -- Player:getDarkRPVar("char_MyColor")
         --
-        --Name = "IDN",
+        --Name = "MyColor",
         WriteFn = net.WriteString,
         ReadFn = net.ReadString,
     },
