@@ -205,6 +205,13 @@ function DarkRP.Characters.CreateFieldSimple(field)
                 return success ~= false, err
             end
         end
+
+        -- Set DarkRP var to nil after player is left character
+        if field.DarkRPVar then
+            hook.Add("PlayerLeftCharacter", hookID, function(char)
+                char.Player:setDarkRPVar(field.DarkRPVar.Name, nil)
+            end)
+        end
     else -- CLIENT
         -- Update field directly in `DarkRP.Character`
         if field.SharedData then
