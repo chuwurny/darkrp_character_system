@@ -63,107 +63,18 @@ end
 --- `PLAYER:FindLoadedCharacters` to find all loaded characters.
 ---@see Player.FindLoadedCharacters
 ---
---- When loading characters hook "CharacterLoad" will be called to restore data
---- from database (`CHARACTER.PrivateData`). After this hook "CharacterLoaded"
---- is called and character is synchronized with this player.
----
---- NOTE: `DarkRP.Characters.Loaded` is modified on hook "CharacterLoaded"!
+--- Internally calls `DarkRP.Characters.LoadBySteamID64` so check it out for
+--- important information
+---@see DarkRP.Characters.LoadBySteamID64
 ---
 ---@param callback fun(chars: DarkRP.CharacterInfo[])
 function PLAYER:LoadCharacters(callback)
-    MySQLite.query(
-        string.format(
-            [[SELECT
-                  id, steamid,
-                  name,
-                  last_access_time,
-                  health, armor,
-                  dead,
-                  data,
-                  darkrp_chars_pos.pos_x,
-                  darkrp_chars_pos.pos_y,
-                  darkrp_chars_pos.pos_z
-              FROM
-                  darkrp_characters
-              LEFT JOIN darkrp_chars_pos ON
-                  darkrp_characters.id = darkrp_chars_pos.char_id AND
-                  darkrp_chars_pos.map = %s
-              WHERE steamid = %s]],
-            MySQLite.SQLStr(game.GetMap()),
-            MySQLite.SQLStr(self:SteamID())
-        ),
-        function(rows)
-            if not IsValid(self) then
-                return
-            end
-
-            ---@type DarkRP.CharacterInfo[]
-            local chars = {}
-
-            for _, cols in ipairs(rows or {}) do
-                local data = util.JSONToTable(cols.data)
-
-                if data == nil then
-                    ErrorNoHalt(
-                        string.format(
-                            'Player %s character %d has corrupted database "data" field. Not loading character until fixed!',
-                            self,
-                            cols.id
-                        )
-                    )
-                else
-                    ---@type DarkRP.Character
-                    local char = DarkRP.Characters.New(self)
-
-                    char.Player = self
-
-                    char.Name = cols.name
-
-                    char.Armor = tonumber(cols.armor) --[[@as integer]]
-                    char.Health = tonumber(cols.health) --[[@as integer]]
-
-                    char.Dead = cols.dead == "1"
-
-                    char.LastAccessTime = tonumber(cols.last_access_time) --[[@as integer]]
-
-                    if cols.pos_x and cols.pos_x ~= "NULL" then
-                        char.Pos = Vector(
-                            tonumber(cols.pos_x),
-                            tonumber(cols.pos_y),
-                            tonumber(cols.pos_z)
-                        )
-                    end
-
-                    char.PrivateData = data.PrivateData
-
-                    hook.Run(
-                        "CharacterLoad",
-                        char,
-                        char.PrivateData,
-                        char.SharedData
-                    )
-
-                    char.ID = tonumber(cols.id) --[[@as integer]]
-
-                    DarkRP.Characters.Loaded[char.ID] = char
-
-                    hook.Run("CharacterLoaded", char)
-
-                    char:Sync()
-
-                    table.insert(chars, char)
-                end
-            end
-
-            callback(chars)
-        end,
-        DarkRP.Characters._TraceAsyncError()
-    )
+    DarkRP.Characters.LoadBySteamID(self:SteamID(), callback)
 end
 
 function PLAYER:UnloadCharacters()
     for _, char in pairs(DarkRP.Characters.Loaded) do
-        if char.Player == self then
+        if char.Player == self and not char.ManualUnload then
             char:Unload()
         end
     end

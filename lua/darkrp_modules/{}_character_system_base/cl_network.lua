@@ -4,12 +4,30 @@ net.Receive("DarkRPSyncCharacter", function()
     local hasSyncedBefore = DarkRP.Characters.Loaded[id] ~= nil
 
     local char = DarkRP.Characters.Loaded[id]
-        or DarkRP.Characters.New(LocalPlayer())
-    char.ID = id
 
     local syncInfo = net.ReadBool()
 
     if syncInfo then
+        local steamID = util.SteamIDFrom64(net.ReadUInt64())
+
+        if not char then
+            if steamID == LocalPlayer():SteamID() then
+                char = DarkRP.Characters.New(LocalPlayer())
+            else
+                local ply = player.GetBySteamID(steamID)
+
+                if IsValid(ply) then
+                    ---@cast ply Player
+
+                    char = DarkRP.Characters.New(ply)
+                else
+                    char = DarkRP.Characters.New(steamID)
+                end
+            end
+
+            char.ID = id
+        end
+
         char.Name = net.ReadString()
         char.LastAccessTime = net.ReadUInt(32)
         char.Health = net.ReadUInt(32)

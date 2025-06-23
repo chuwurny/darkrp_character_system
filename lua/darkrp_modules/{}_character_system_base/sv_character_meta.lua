@@ -32,9 +32,12 @@ local DEFAULT_FIELDS = {
     ["Armor"] = true,
     ["Dead"] = true,
     ["Pos"] = true,
+    ["Temporary"] = true,
+    ["ManualUnload"] = true,
     ["SharedData"] = true,
     ["PrivateData"] = true,
     ["_UserData"] = true,
+    ["_Receivers"] = true,
 }
 
 function CHARACTER:__newindex(key, value)
@@ -61,7 +64,8 @@ end
 
 --- Fully synchronizes character with creator
 ---@param fields ("all"|"info"|"data")? Default: "all"
-function CHARACTER:Sync(fields)
+---@param receivers (Player|Player[]|CRecipientFilter)?
+function CHARACTER:Sync(fields, receivers)
     net.Start("DarkRPSyncCharacter")
 
     local syncAll = not fields or fields == "all"
@@ -73,6 +77,7 @@ function CHARACTER:Sync(fields)
     net.WriteBool(syncInfo)
 
     if syncInfo then
+        net.WriteUInt64(util.SteamIDTo64(self.SteamID))
         net.WriteString(self.Name)
         net.WriteUInt(self.LastAccessTime, 32)
         net.WriteUInt(self.Health, 32)
@@ -86,7 +91,7 @@ function CHARACTER:Sync(fields)
         net.WriteTable(self.SharedData)
     end
 
-    net.Send(self.Player)
+    net.Send(receivers or self._Receivers)
 end
 
 --- Saves current player position
@@ -102,8 +107,8 @@ function CHARACTER:SavePos(callback)
         MySQLite.query(
             string.format(
                 [[REPLACE INTO darkrp_chars_pos
-              (char_id, map, pos_x, pos_y, pos_z)
-              VALUES(%d, %s, %d, %d, %d)]],
+                  (char_id, map, pos_x, pos_y, pos_z)
+                  VALUES(%d, %s, %d, %d, %d)]],
                 self.ID,
                 MySQLite.SQLStr(game.GetMap()),
                 self.Pos.x,
@@ -234,7 +239,7 @@ function CHARACTER:Save(callback)
                     [[INSERT INTO darkrp_characters
                       (steamid, name, health, armor, dead, data)
                       VALUES(%s, %s, %d, %d, %d, %s);
-                  SELECT LAST_INSERT_ROWID() AS id;]],
+                      SELECT LAST_INSERT_ROWID() AS id;]],
                     MySQLite.SQLStr(self.Player:SteamID()),
                     MySQLite.SQLStr(self.Name),
                     self.Health,
@@ -299,7 +304,7 @@ function CHARACTER:Delete(callback)
         if IsValid(self.Player) then
             net.Start("DarkRPDeleteCharacter")
             net.WriteUInt(self.ID, 32)
-            net.Send(self.Player)
+            net.Send(self._Receivers)
         end
 
         if callback then
@@ -321,6 +326,19 @@ function CHARACTER:Delete(callback)
     end
 end
 
+--- Unloads character on receivers clientside.
+---
+--- WARNING: Don't use it if you don't know what you're doing! See
+--- `CHARACTER:RemoveListener` as an better alternative
+---@see DarkRP.Character.RemoveListener
+---
+---@param receivers Player|Player[]|CRecipientFilter
+function CHARACTER:UnloadFor(receivers)
+    net.Start("DarkRPUnloadCharacter")
+    net.WriteUInt(self.ID, 32)
+    net.Send(receivers)
+end
+
 --- Unloads character. Character will become unusable until will be loaded
 --- again. Don't use it if you don't know what you're doing!
 function CHARACTER:Unload()
@@ -332,9 +350,7 @@ function CHARACTER:Unload()
     end
 
     if IsValid(self.Player) then
-        net.Start("DarkRPUnloadCharacter")
-        net.WriteUInt(self.ID, 32)
-        net.Send(self.Player)
+        self:UnloadFor(self.Player)
     end
 
     DarkRP.Characters.Loaded[self.ID] = nil
@@ -368,7 +384,8 @@ end
 --- Synchronizes data value with client.
 ---
 ---@param key any
-function CHARACTER:SyncData(key)
+---@param receivers (Player|Player[]|CRecipientFilter)?
+function CHARACTER:SyncData(key, receivers)
     -- prevent sending data when character is loading
     if not self.ID then
         return
@@ -380,5 +397,27 @@ function CHARACTER:SyncData(key)
     net.WriteUInt(self.ID, 32)
     net.WriteType(key)
     net.WriteType(value)
-    net.Send(self.Player)
+    net.Send(receivers or self._Receivers)
+end
+
+---@param ply Player
+---@return boolean
+function CHARACTER:IsListening(ply)
+    return table.HasValue(self._Receivers:GetPlayers(), ply)
+end
+
+---@param ply Player
+---@param doSync boolean? (Default: true)
+function CHARACTER:AddListener(ply, doSync)
+    self._Receivers:AddPlayer(ply)
+
+    if doSync ~= false then
+        self:Sync("all", ply)
+    end
+end
+
+---@param ply Player
+function CHARACTER:RemoveListener(ply)
+    self._Receivers:RemovePlayer(ply)
+    self:UnloadFor(ply)
 end

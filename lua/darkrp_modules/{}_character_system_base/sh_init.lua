@@ -25,19 +25,45 @@ end
 ---
 --- WARN: For internal usage only!
 ---
----@param ply Player
+---@param plyOrSteamID Player|string Player or steam id
 ---@return DarkRP.Character
-function DarkRP.Characters.New(ply)
+function DarkRP.Characters.New(plyOrSteamID)
+    local ply, steamID
+
+    if type(plyOrSteamID) == "Player" then
+        ply = plyOrSteamID
+        steamID = ply:SteamID()
+    else
+        ply = nil
+        steamID = plyOrSteamID
+    end
+
+    local receivers
+
+    if SERVER then
+        receivers = RecipientFilter()
+
+        if type(ply) == "Player" then
+            receivers:AddPlayer(ply)
+        end
+    end
+
     return setmetatable({
         ID = nil,
         Player = ply,
+        ManualUnload = not IsValid(ply),
+        SteamID = steamID,
         LastAccessTime = 0,
-        Health = ply:GetMaxHealth(),
+        Health = IsValid(ply)
+                ---@cast ply -?
+                and ply:GetMaxHealth()
+            or 100,
         Armor = 0,
         Dead = false,
         Pos = nil,
         SharedData = {},
         PrivateData = SERVER and {} or nil,
         _UserData = SERVER and {} or nil,
+        _Receivers = receivers,
     }, DarkRP.Characters.CHARACTER)
 end
