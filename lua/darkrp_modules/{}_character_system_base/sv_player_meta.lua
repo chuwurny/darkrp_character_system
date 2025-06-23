@@ -13,25 +13,31 @@ local PLAYER = FindMetaTable("Player")
 ---
 ---@param info DarkRP.CharacterInfo
 ---@param callback fun(err: string?, char: DarkRP.Character?)
----@param temporary boolean?
-function PLAYER:CreateCharacter(info, callback, temporary)
-    ---@diagnostic disable-next-line: undefined-field
-    if
-        not temporary
-        and #self:FindLoadedCharacters()
-            >= (GAMEMODE.Config.MaxCharacters or 2)
-    then
-        return callback("char_limit", nil)
-    end
+---@param temporary boolean? (Default: false)
+---@param force boolean? (Default: false)
+---@overload fun(info: DarkRP.CharacterInfo, callback: fun(err: nil, char: DarkRP.Character?), temporary: boolean?, force: true)
+function PLAYER:CreateCharacter(info, callback, temporary, force)
+    if not force then
+        ---@diagnostic disable-next-line: undefined-field
+        if
+            not temporary
+            and #self:FindLoadedCharacters()
+                >= (GAMEMODE.Config.MaxCharacters or 2)
+        then
+            return callback("char_limit", nil)
+        end
 
-    if utf8.len(info.Name) > (GAMEMODE.Config.CharacterMaxNameLength or 32) then
-        return callback("long_name", nil)
-    end
+        if
+            utf8.len(info.Name) > (GAMEMODE.Config.CharacterMaxNameLength or 32)
+        then
+            return callback("long_name", nil)
+        end
 
-    local allowed, reason = hook.Run("PlayerCanCreateCharacter", self, info)
+        local allowed, reason = hook.Run("PlayerCanCreateCharacter", self, info)
 
-    if allowed == false then
-        return callback(reason or "no_reason", nil)
+        if allowed == false then
+            return callback(reason or "no_reason", nil)
+        end
     end
 
     local char = DarkRP.Characters.New(self)
@@ -177,7 +183,8 @@ end
 --- After granted permission to enter character, DarkRP variables "CharacterID",
 --- "rpname" will be modified. Following things will happen in specified order:
 ---
---- 1. Hook "CharacterRestore" is called when player is allowed to enter character.
+--- 1. Hook "CharacterRestore" is called when player is allowed to enter
+--- character.
 --- Modify player in this hook!
 ---
 --- 2. Hook "PlayerEnteredCharacter" is called after "CharacterRestore".
@@ -207,9 +214,16 @@ end
 --- 10. Hook "CharacterSpawn" is called. Player is ready!
 ---
 ---@param char DarkRP.MaybeCharacter
+---
+--- (Default: false) If `true` then it enters character by force.
+--- "PlayerCanEnterCharacter" wont be called and return value will be _always_
+--- `true`
+---@param force boolean?
+---
 ---@return boolean success
 ---@return string? err
-function PLAYER:EnterCharacter(char)
+---@overload fun(self: self, char: DarkRP.MaybeCharacter, force: true): true, nil
+function PLAYER:EnterCharacter(char, force)
     assert(
         not self:IsEnteredCharacter(),
         "Leave character first. Use PLAYER:LeaveCharacter"
@@ -217,10 +231,12 @@ function PLAYER:EnterCharacter(char)
 
     char = DarkRP.Characters.ToCharacter(char)
 
-    local allowed, reason = hook.Run("PlayerCanEnterCharacter", self, char)
+    if not force then
+        local allowed, reason = hook.Run("PlayerCanEnterCharacter", self, char)
 
-    if allowed == false then
-        return false, reason or "no_reason"
+        if allowed == false then
+            return false, reason or "no_reason"
+        end
     end
 
     self:setDarkRPVar("rpname", char.Name)
@@ -250,8 +266,14 @@ end
 --- In the end hook "PlayerLeftCharacter" will be called and `true` will be
 --- returned.
 ---
----@return boolean
-function PLAYER:LeaveCharacter()
+---
+--- (Default: false) If `true` then it will ignore all checks and wont run
+--- "PlayerCanLeaveCharacter" and this function will _always_ return `true`
+---@param force boolean?
+---
+---@return boolean `true` if player left
+---@overload fun(self: self, force: true): true
+function PLAYER:LeaveCharacter(force)
     assert(
         self:IsEnteredCharacter(),
         "Enter character first. Use PLAYER:EnterCharacter"
@@ -259,8 +281,10 @@ function PLAYER:LeaveCharacter()
 
     local char = self:GetCharacter()
 
-    if hook.Run("PlayerCanLeaveCharacter", self, char) == false then
-        return false
+    if not force then
+        if hook.Run("PlayerCanLeaveCharacter", self, char) == false then
+            return false
+        end
     end
 
     char:Save()
