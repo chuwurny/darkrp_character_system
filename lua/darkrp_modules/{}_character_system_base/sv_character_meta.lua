@@ -346,7 +346,7 @@ function CHARACTER:Unload()
         self.Player:IsEnteredCharacter()
         and self.Player:GetCharacter() == self
     then
-        self.Player:LeaveCharacter()
+        self.Player:LeaveCharacter(true)
     end
 
     if IsValid(self.Player) then
