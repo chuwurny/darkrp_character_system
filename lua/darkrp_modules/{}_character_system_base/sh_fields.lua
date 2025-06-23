@@ -5,6 +5,9 @@ DarkRP.Characters = DarkRP.Characters or {}
 ---@field Name string? Variable name
 ---@field WriteFn fun(v: any) Write function
 ---@field ReadFn fun(): any Read function
+---
+--- (Default: `false`) Field won't use DarkRP var to save this field
+---@field NotForSave boolean?
 
 ---@class DarkRP.Characters.SimpleField.MetaWrapper
 ---@field FnName string? Overrides meta function name
@@ -112,7 +115,11 @@ function DarkRP.Characters.CreateFieldSimple(field)
         ---@param char DarkRP.Character
         ---@param private DarkRP.Character.PrivateData
         hook.Add("CharacterSave", hookID, function(char, _, private)
-            if field.DarkRPVar and char:IsActive() then
+            if
+                field.DarkRPVar
+                and not field.DarkRPVar.NotForSave
+                and char:IsActive()
+            then
                 private[field.Name] =
                     char.Player:getDarkRPVar(field.DarkRPVar.Name)
 
