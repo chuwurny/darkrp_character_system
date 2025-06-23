@@ -232,7 +232,7 @@ function DarkRP.Characters.CreateFieldSimple(field)
         end
     end
 
-    -- Register DarkrP var
+    -- Register DarkRP var
     if field.DarkRPVar then
         DarkRP.registerDarkRPVar(
             field.DarkRPVar.Name,
