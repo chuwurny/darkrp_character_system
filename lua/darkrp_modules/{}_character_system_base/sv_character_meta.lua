@@ -27,6 +27,7 @@ local DEFAULT_FIELDS = {
     ["ID"] = true,
     ["Player"] = true,
     ["LastAccessTime"] = true,
+    ["Name"] = true,
     ["Health"] = true,
     ["Armor"] = true,
     ["Dead"] = true,
