@@ -121,6 +121,23 @@ function DarkRP.Characters.CreateFieldSimple(field)
             end
         end)
 
+        -- If field is shared and changed in `DarkRP.Character` then broadcast
+        -- its state to the client and set DarkRP var
+        if field.SharedData or field.DarkRPVar then
+            ---@param char DarkRP.Character
+            hook.Add("CharacterFieldSet", hookID, function(char, key, value)
+                if key == field.Name then
+                    if field.SharedData then
+                        char:SetData(key, value)
+                    end
+
+                    if field.DarkRPVar and char:IsActive() then
+                        char.Player:setDarkRPVar(field.DarkRPVar.Name, value)
+                    end
+                end
+            end)
+        end
+
         if field.MetaWrapper then
             local fnName = "SetCharacter" .. field.Name
             local onCall
@@ -157,16 +174,7 @@ function DarkRP.Characters.CreateFieldSimple(field)
 
                 if success ~= false then
                     char[field.Name] = value
-
-                    if field.SharedData then
-                        char:SetData(field.Name, value, true)
-                    else
-                        char.PrivateData[field.Name] = value
-                    end
-
-                    if field.DarkRPVar then
-                        ply:setDarkRPVar(field.DarkRPVar.Name, value)
-                    end
+                    char.PrivateData[field.Name] = value
                 end
 
                 return success ~= false, err
@@ -197,11 +205,5 @@ function DarkRP.Characters.CreateFieldSimple(field)
             field.DarkRPVar.WriteFn,
             field.DarkRPVar.ReadFn
         )
-
-        if SERVER then
-            hook.Add("CharacterRestore", hookID, function(char)
-                char.Player:setDarkRPVar(field.DarkRPVar.Name, char[field.Name])
-            end)
-        end
     end
 end
