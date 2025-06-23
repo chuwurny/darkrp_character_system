@@ -54,6 +54,8 @@ function DarkRP.Characters.CreateFieldSimple(field)
     end
 
     if SERVER then
+        -- Add hook to validate field on character creation by calling
+        -- `field.ValidateFn`
         if field.ValidateFn then
             ---@param info DarkRP.CharacterInfo
             hook.Add("PlayerCanCreateCharacter", hookID, function(_, info)
@@ -75,6 +77,9 @@ function DarkRP.Characters.CreateFieldSimple(field)
             end)
         end
 
+        --- Set field in `DarkRP.Character`, `DarkRP.Character.PrivateData` ,
+        --- `DarkRP.Character.SharedData` from received info from the player
+        ---
         ---@param char DarkRP.Character
         ---@param info DarkRP.CharacterInfo
         hook.Add("CreatePlayerCharacter", hookID, function(char, info)
@@ -92,6 +97,7 @@ function DarkRP.Characters.CreateFieldSimple(field)
             end
         end)
 
+        -- Call `field.Apply` when player is entered the character
         if field.Apply then
             ---@param char DarkRP.Character
             hook.Add("CharacterPreSpawn", hookID, function(char)
@@ -99,17 +105,27 @@ function DarkRP.Characters.CreateFieldSimple(field)
             end)
         end
 
+        --- Save field by setting it in `DarkRP.Character.PrivateData`. If
+        --- `field.DarkRPVar` is set then try to use it as saving value.
+        --- Otherwise we're getting it from `DarkRP.Character` directly
+        ---
         ---@param char DarkRP.Character
         ---@param private DarkRP.Character.PrivateData
         hook.Add("CharacterSave", hookID, function(char, _, private)
             if field.DarkRPVar and char:IsActive() then
                 private[field.Name] =
                     char.Player:getDarkRPVar(field.DarkRPVar.Name)
+
+                return
             end
 
             private[field.Name] = char[field.Name]
         end)
 
+        --- From `DarkRP.Character.PrivateData` set field directly to
+        --- `DarkRP.Character` and if `field.SharedData` is set then to
+        --- `DarkRP.Character.SharedData` to broadcast the field
+        ---
         ---@param char DarkRP.Character
         ---@param private DarkRP.Character.PrivateData
         ---@param shared DarkRP.Character.SharedData
@@ -138,6 +154,8 @@ function DarkRP.Characters.CreateFieldSimple(field)
             end)
         end
 
+        -- Add `PLAYER:SetCharacter[field name]` wrapper that will validate
+        -- input data and
         if field.MetaWrapper then
             local fnName = "SetCharacter" .. field.Name
             local onCall
@@ -181,6 +199,7 @@ function DarkRP.Characters.CreateFieldSimple(field)
             end
         end
     else -- CLIENT
+        -- Update field directly in `DarkRP.Character`
         if field.SharedData then
             ---@param char DarkRP.Character
             ---@param shared table
@@ -199,6 +218,7 @@ function DarkRP.Characters.CreateFieldSimple(field)
         end
     end
 
+    -- Register DarkrP var
     if field.DarkRPVar then
         DarkRP.registerDarkRPVar(
             field.DarkRPVar.Name,
