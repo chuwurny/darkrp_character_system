@@ -38,5 +38,6 @@ function DarkRP.Characters.New(ply)
         Pos = nil,
         SharedData = {},
         PrivateData = {},
+        _UserData = SERVER and {} or nil,
     }, DarkRP.Characters.CHARACTER)
 end

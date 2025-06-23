@@ -6,25 +6,47 @@ DarkRP.Characters.NextTemporaryID = DarkRP.Characters.NextTemporaryID or 0
 
 ---@class DarkRP.Character
 local CHARACTER = DarkRP.Characters.CHARACTER
-CHARACTER.__index = CHARACTER
 
-local IGNORED_FIELDS = {
+function CHARACTER:__index(key)
+    local value = CHARACTER[key]
+
+    if value ~= nil then
+        return value
+    end
+
+    value = rawget(self, key)
+
+    if value ~= nil then
+        return value
+    end
+
+    return rawget(self, "_UserData")[key]
+end
+
+local DEFAULT_FIELDS = {
     ["ID"] = true,
+    ["Player"] = true,
+    ["LastAccessTime"] = true,
+    ["Health"] = true,
+    ["Armor"] = true,
+    ["Dead"] = true,
+    ["Pos"] = true,
     ["SharedData"] = true,
     ["PrivateData"] = true,
+    ["_UserData"] = true,
 }
 
 function CHARACTER:__newindex(key, value)
-    if not IGNORED_FIELDS[key] then
+    if DEFAULT_FIELDS[key] then
+        rawset(self, key, value)
+    else
         value = hook.Run("CharacterOverrideField", self, key, value) or value
 
         hook.Run("CharacterFieldPreSet", self, key, value)
 
-        rawset(self, key, value)
+        self._UserData[key] = value
 
         hook.Run("CharacterFieldSet", self, key, value)
-    else
-        rawset(self, key, value)
     end
 end
 

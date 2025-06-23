@@ -35,6 +35,8 @@ DarkRP.Characters = DarkRP.Characters or {}
 --- Data that will be saved in database. Unlike `SharedData` this table is not
 --- shared between assigned player
 ---@field PrivateData DarkRP.Character.PrivateData
+---
+---@field protected _UserData table
 DarkRP.Characters.CHARACTER = DarkRP.Characters.CHARACTER or {}
 
 ---@class DarkRP.Character
