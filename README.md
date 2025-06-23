@@ -170,3 +170,40 @@ DarkRP.Characters.CreateFieldSimple({
     SetByServer = true,
 })
 ```
+
+### Accessing fields
+
+Let's create simple character "ban" function that will kick player from the
+character and set `Banned` field to `true`
+
+```lua
+---@class DarkRP.Character
+local CHARACTER = DarkRP.Characters.CHARACTER
+
+function CHARACTER:Ban()
+    if self.Banned then
+        -- already banned
+
+        return
+    end
+
+    self.Banned = true
+
+    -- kick player from the character if he's playing
+    if self:IsActive() then
+        self.Player:LeaveCharacter(true --[[ <<< force ]])
+
+        -- PLAYER:LeaveCharacter is calling CHARACTER:Save that's why we dont
+        -- need to save it
+    else
+        self:Save()
+    end
+end
+
+-- Prevent player from accessing the banned character
+hook.Add("PlayerCanEnterCharacter", "PreventEnteringBannedChar", function(char)
+    if char.Banned then
+        return false, "banned"
+    end
+end)
+```
