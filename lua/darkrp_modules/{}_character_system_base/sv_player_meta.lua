@@ -115,7 +115,6 @@ function PLAYER:LoadCharacters(callback)
                     ---@type DarkRP.Character
                     local char = DarkRP.Characters.New(self)
 
-                    char.ID = tonumber(cols.id) --[[@as integer]]
                     char.Player = self
 
                     char.Name = cols.name
@@ -143,6 +142,8 @@ function PLAYER:LoadCharacters(callback)
                         char.PrivateData,
                         char.SharedData
                     )
+
+                    char.ID = tonumber(cols.id) --[[@as integer]]
 
                     DarkRP.Characters.Loaded[char.ID] = char
 

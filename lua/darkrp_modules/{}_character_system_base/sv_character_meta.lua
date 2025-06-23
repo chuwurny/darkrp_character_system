@@ -368,6 +368,11 @@ end
 ---
 ---@param key any
 function CHARACTER:SyncData(key)
+    -- prevent sending data when character is loading
+    if not self.ID then
+        return
+    end
+
     local value = self.SharedData[key]
 
     net.Start("DarkRPSyncCharacterData")
