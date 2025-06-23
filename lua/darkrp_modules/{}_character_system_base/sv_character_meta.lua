@@ -8,6 +8,26 @@ DarkRP.Characters.NextTemporaryID = DarkRP.Characters.NextTemporaryID or 0
 local CHARACTER = DarkRP.Characters.CHARACTER
 CHARACTER.__index = CHARACTER
 
+local IGNORED_FIELDS = {
+    ["ID"] = true,
+    ["SharedData"] = true,
+    ["PrivateData"] = true,
+}
+
+function CHARACTER:__newindex(key, value)
+    if not IGNORED_FIELDS[key] then
+        value = hook.Run("CharacterOverrideField", self, key, value) or value
+
+        hook.Run("CharacterFieldPreSet", self, key, value)
+
+        rawset(self, key, value)
+
+        hook.Run("CharacterFieldSet", self, key, value)
+    else
+        rawset(self, key, value)
+    end
+end
+
 ---@protected
 function CHARACTER:EnsureInDatabase()
     assert(
