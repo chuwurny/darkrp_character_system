@@ -319,6 +319,15 @@ function CHARACTER:SetData(key, value, addToPrivateData)
         self.PrivateData[key] = value
     end
 
+    self:SyncData(key)
+end
+
+--- Synchronizes data value with client.
+---
+---@param key any
+function CHARACTER:SyncData(key)
+    local value = self.SharedData[key]
+
     net.Start("DarkRPSyncCharacterData")
     net.WriteUInt(self.ID, 32)
     net.WriteType(key)
