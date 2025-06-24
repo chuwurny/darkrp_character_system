@@ -207,11 +207,7 @@ else
 end
 
 hook.Add("PlayerDisconnected", "DarkRPCharacters_LeaveCharacter", function(ply)
-    ---@cast ply Player
-
-    if ply:IsEnteredCharacter() then
-        ply:LeaveCharacter()
-    end
+    ply:UnloadCharacters()
 end)
 
 hook.Add("playerGetSalary", "DarkRPCharacters_NoCharNoSalary", function(ply)
