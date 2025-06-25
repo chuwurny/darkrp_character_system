@@ -72,7 +72,9 @@ end
 --- Returns `true` if character is valid and player is playing this character
 ---@return boolean
 function CHARACTER:IsActive()
-    return self:IsValid() and self.Player:GetCharacter() == self
+    return self:IsValid()
+        and self.Player:IsEnteredCharacter()
+        and self.Player:GetCharacter() == self
 end
 
 --- Returns `true` if character is offline character. It means that
