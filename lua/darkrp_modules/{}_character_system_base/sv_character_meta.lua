@@ -342,10 +342,7 @@ end
 --- Unloads character. Character will become unusable until will be loaded
 --- again. Don't use it if you don't know what you're doing!
 function CHARACTER:Unload()
-    if
-        self.Player:IsEnteredCharacter()
-        and self.Player:GetCharacter() == self
-    then
+    if self:IsActive() then
         self.Player:LeaveCharacter(true)
     end
 
