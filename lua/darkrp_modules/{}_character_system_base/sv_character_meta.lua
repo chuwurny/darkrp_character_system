@@ -347,7 +347,7 @@ function CHARACTER:Unload()
     end
 
     if IsValid(self.Player) then
-        self:UnloadFor(self.Player)
+        self:UnloadFor(self._Receivers)
     end
 
     DarkRP.Characters.Loaded[self.ID] = nil
