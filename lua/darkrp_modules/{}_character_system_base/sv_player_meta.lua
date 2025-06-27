@@ -5,7 +5,9 @@ local PLAYER = FindMetaTable("Player")
 ---
 --- Hook "PlayerCanEnterCharacter" is called before creating character.
 ---
---- After character is created hook "PlayerCreatedCharacter" is raised. After
+--- After "ValidateCharacterInfo" hook is called before creating character.
+---
+--- After character is created hook "PlayerCreatedCharacter" is called. After
 --- this hook character is being saved and synced between this player.
 ---
 --- Use hook "CreatePlayerCharacter" to modify new character before passing it
@@ -18,19 +20,13 @@ local PLAYER = FindMetaTable("Player")
 ---@overload fun(info: DarkRP.CharacterInfo, callback: fun(err: nil, char: DarkRP.Character?), temporary: boolean?, force: true)
 function PLAYER:CreateCharacter(info, callback, temporary, force)
     if not force then
-        ---@diagnostic disable-next-line: undefined-field
         if
             not temporary
             and #self:FindLoadedCharacters()
+                ---@diagnostic disable-next-line: undefined-field
                 >= (GAMEMODE.Config.MaxCharacters or 2)
         then
             return callback("char_limit", nil)
-        end
-
-        if
-            utf8.len(info.Name) > (GAMEMODE.Config.CharacterMaxNameLength or 32)
-        then
-            return callback("long_name", nil)
         end
 
         local allowed, reason = hook.Run("PlayerCanCreateCharacter", self, info)
@@ -40,21 +36,12 @@ function PLAYER:CreateCharacter(info, callback, temporary, force)
         end
     end
 
-    local char = DarkRP.Characters.New(self)
-    char.Name = info.Name
-    char.Temporary = temporary == true
+    DarkRP.Characters.Create(self:SteamID(), info, function(char)
+        char.Temporary = temporary == true
 
-    -- hypothetically speaking character is just being born :trollface:
-    char.Dead = true
-
-    hook.Run("CreatePlayerCharacter", char, info)
-    hook.Run("PlayerCreatedCharacter", char)
-
-    char:Save(function()
-        char:Sync()
-
-        callback(nil, char)
-    end)
+        hook.Run("CreatePlayerCharacter", char, info)
+        hook.Run("PlayerCreatedCharacter", char)
+    end, callback, force, true)
 end
 
 --- Loads all characters from database.

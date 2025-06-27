@@ -61,7 +61,7 @@ function DarkRP.Characters.CreateFieldSimple(field)
         -- `field.ValidateFn`
         if field.ValidateFn then
             ---@param info DarkRP.CharacterInfo
-            hook.Add("PlayerCanCreateCharacter", hookID, function(_, info)
+            hook.Add("ValidateCharacterInfo", hookID, function(info)
                 if field.SetByServer then
                     return
                 elseif info[field.Name] == nil then

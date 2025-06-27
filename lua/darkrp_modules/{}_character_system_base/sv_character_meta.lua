@@ -163,45 +163,47 @@ function CHARACTER:Save(callback)
 
     self.LastAccessTime = os.time(os.date("!*t") --[[@as osdate]])
 
-    if self.Player:Alive() then
-        self.Pos = self.Player:GetPos()
-        self.Health = self.Player:Health()
-        self.Armor = self.Player:Armor()
-        self.Dead = false
-    else
-        self.Pos = nil
-        self.Health = self.Player:GetMaxHealth()
-        self.Armor = self.Player:GetMaxArmor()
-        self.Dead = true
-    end
-
-    if self.Dead then
-        self.PrivateData.Weapons = nil
-        self.PrivateData.Ammo = nil
-    else
-        local ignoreWeapons = GAMEMODE.Config.DontSaveCharacterWeapons or {}
-
-        local weapons = {}
-        local ammo = {}
-
-        for _, weapon in ipairs(self.Player:GetWeapons()) do
-            ---@cast weapon Weapon
-
-            if not ignoreWeapons[weapon:GetClass()] then
-                weapons[weapon:GetClass()] = {
-                    Clip1 = weapon:Clip1(),
-                }
-
-                local ammoType = weapon:GetPrimaryAmmoType()
-
-                if not ammo[ammoType] then
-                    ammo[ammoType] = self.Player:GetAmmoCount(ammoType)
-                end
-            end
+    if not self:IsOffline() then
+        if self.Player:Alive() then
+            self.Pos = self.Player:GetPos()
+            self.Health = self.Player:Health()
+            self.Armor = self.Player:Armor()
+            self.Dead = false
+        else
+            self.Pos = nil
+            self.Health = self.Player:GetMaxHealth()
+            self.Armor = self.Player:GetMaxArmor()
+            self.Dead = true
         end
 
-        self.PrivateData.Weapons = weapons
-        self.PrivateData.Ammo = ammo
+        if self.Dead then
+            self.PrivateData.Weapons = nil
+            self.PrivateData.Ammo = nil
+        else
+            local ignoreWeapons = GAMEMODE.Config.DontSaveCharacterWeapons or {}
+
+            local weapons = {}
+            local ammo = {}
+
+            for _, weapon in ipairs(self.Player:GetWeapons()) do
+                ---@cast weapon Weapon
+
+                if not ignoreWeapons[weapon:GetClass()] then
+                    weapons[weapon:GetClass()] = {
+                        Clip1 = weapon:Clip1(),
+                    }
+
+                    local ammoType = weapon:GetPrimaryAmmoType()
+
+                    if not ammo[ammoType] then
+                        ammo[ammoType] = self.Player:GetAmmoCount(ammoType)
+                    end
+                end
+            end
+
+            self.PrivateData.Weapons = weapons
+            self.PrivateData.Ammo = ammo
+        end
     end
 
     hook.Run("CharacterSave", self, self.SharedData, self.PrivateData)
@@ -240,7 +242,7 @@ function CHARACTER:Save(callback)
                       (steamid, name, health, armor, dead, data)
                       VALUES(%s, %s, %d, %d, %d, %s);
                       SELECT LAST_INSERT_ROWID() AS id;]],
-                    MySQLite.SQLStr(self.Player:SteamID()),
+                    MySQLite.SQLStr(self.SteamID),
                     MySQLite.SQLStr(self.Name),
                     self.Health,
                     self.Armor,

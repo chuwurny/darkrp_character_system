@@ -204,3 +204,84 @@ function DarkRP.Characters.ListAll(offset, amount, callback)
         callback(rows)
     end, DarkRP.Characters._TraceAsyncError())
 end
+
+--- Creates offline character for any player by steam id. If you wan't to create
+--- character for the existing player then see `PLAYER:CreateCharacter` function
+---@see Player.CreateCharacter
+---
+--- Calls "ValidateCharacterInfo" hook before creating character to validate
+--- @info. Hook won't be called if @force is set to `true`.
+---
+---@param steamID string In STEAM_X:Y:ZZZZZZ format
+---@param info DarkRP.CharacterInfo
+---
+--- Called _before_ saving. Setup wanted character fields here
+---@param onCreated fun(char: DarkRP.Character)?
+---
+--- Called when character is ready. If @doLoad is `true` then `char` argument
+--- will be set, if no error is occured. If @doLoad is `false` then on success
+--- this field will be character ID.
+---
+--- `err` argument will be set only if `force` is *not* set to `false`.
+---@param callback fun(err: ("long_name"|"no_reason"|string)?, char: nil)
+---
+---@param force boolean? (Default: false) Ignore checks
+---@param doLoad boolean? (Default: false) Loads character after loading
+---@overload fun(steamID: string, info: DarkRP.CharacterInfo, onCreated: fun(char: DarkRP.Character)?, callback: fun(err: ("long_name"|"no_reason"|string)?, char: DarkRP.Character), force: boolean?, doLoad: true)
+---@overload fun(steamID: string, info: DarkRP.CharacterInfo, onCreated: fun(char: DarkRP.Character)?, callback: fun(err: nil, char: DarkRP.Character), force: true, doLoad: true)
+---@overload fun(steamID: string, info: DarkRP.CharacterInfo, onCreated: fun(char: DarkRP.Character)?, callback: fun(err: nil, charId: integer), force: true, doLoad: boolean?)
+function DarkRP.Characters.Create(
+    steamID,
+    info,
+    onCreated,
+    callback,
+    force,
+    doLoad
+)
+    if not force then
+        if
+            utf8.len(info.Name)
+            ---@diagnostic disable-next-line: undefined-field
+            > (GAMEMODE.Config.CharacterMaxNameLength or 32)
+        then
+            return callback("long_name", nil)
+        end
+
+        local valid, reason = hook.Run("ValidateCharacterInfo", info)
+
+        if valid == false then
+            return callback(reason or "no_reason", nil)
+        end
+    end
+
+    local char = DarkRP.Characters.New(
+        player.GetBySteamID(steamID) --[[@as Player?]]
+            or steamID
+    )
+    char.Name = info.Name
+
+    -- hypothetically speaking character is just being born :trollface:
+    char.Dead = true
+
+    if onCreated then
+        onCreated(char)
+    end
+
+    local function loadChar()
+        if doLoad then
+            char:Sync()
+
+            callback(nil, char)
+        else
+            char:Unload()
+
+            callback(nil, char.ID)
+        end
+    end
+
+    if not char.Temporary then
+        char:Save(loadChar)
+    else
+        loadChar()
+    end
+end
