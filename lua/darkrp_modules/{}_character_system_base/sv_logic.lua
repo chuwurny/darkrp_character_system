@@ -153,21 +153,50 @@ hook.Add("DatabaseInitialized", "DarkRPCharacters_InitDB", function()
                 version = tonumber(rows[1].value) or 1
             end
 
-            MySQLite.query(
-                string.format(
-                    "REPLACE INTO darkrp_chars_db_state VALUES('version', %d)",
-                    DarkRP.Characters.DATABASE_VERSION
-                ),
-                nil,
-                DarkRP.Characters._TraceAsyncError()
-            )
+            local oldVersion = version
+
+            if version == DarkRP.Characters.DATABASE_VERSION then
+                return
+            elseif version > DarkRP.Characters.DATABASE_VERSION then
+                ErrorNoHalt(
+                    string.format(
+                        "Database version is more newer than character system's current database version?! (%d > %d). Something horrible happen! Try to update DarkRP characters base ASAP!",
+                        version,
+                        DarkRP.Characters.DATABASE_VERSION
+                    )
+                )
+            end
 
             local function migrateNext()
                 version = version + 1
 
                 if version > DarkRP.Characters.DATABASE_VERSION then
+                    print(
+                        string.format(
+                            "[DarkRP Characters] Migration from %d to %d done!",
+                            oldVersion,
+                            DarkRP.Characters.DATABASE_VERSION
+                        )
+                    )
+
+                    MySQLite.query(
+                        string.format(
+                            "REPLACE INTO darkrp_chars_db_state VALUES('version', %d)",
+                            DarkRP.Characters.DATABASE_VERSION
+                        ),
+                        nil,
+                        DarkRP.Characters._TraceAsyncError()
+                    )
+
                     return
                 end
+
+                print(
+                    string.format(
+                        "[DarkRP Characters] Migrating to version %d",
+                        version
+                    )
+                )
 
                 MIGRATE_VERSION[version](migrateNext)
             end
