@@ -46,6 +46,16 @@ DarkRP.Characters = DarkRP.Characters or {}
 --- First return value is the "success" of the function. If `false`, then
 --- second argument *can* be an error explaining what did go wrong.
 ---@field MetaWrapper boolean|DarkRP.Characters.SimpleField.MetaWrapper?
+---
+--- (Default: nil) Prevents setting nil value.
+---
+--- "default": prioritize `DefaultValue` field or fallback to previous value
+--- "fallback": prioritize previous value over `DefaultValue` field
+---@field TreatNilAs ("default"|"fallback")?
+---
+--- (Default: nil) Value that will be set if trying to assign nil value or on
+--- character creation if `SetByServer` is set.
+---@field DefaultValue any?
 
 --- Wrapper to create field in character
 ---@param field DarkRP.Characters.SimpleField
@@ -53,6 +63,24 @@ function DarkRP.Characters.CreateFieldSimple(field)
     local IGNORE_DARKRP_VAR_CHANGE = false
 
     local hookID = "DarkRPCharacters_SimpleField" .. field.Name
+
+    local validate
+
+    if field.ValidateFn then
+        ---@param value any
+        ---@param info DarkRP.CharacterInfo
+        function validate(value, info)
+            local status = field.ValidateFn(value, info)
+
+            if type(status) == "string" then
+                return false, status
+            elseif type(status) == "boolean" and not status then
+                return false, "invalid_field:" .. field.Name
+            end
+
+            return true
+        end
+    end
 
     --- preprocess field
     do
@@ -65,22 +93,41 @@ function DarkRP.Characters.CreateFieldSimple(field)
     if SERVER then
         -- Add hook to validate field on character creation by calling
         -- `field.ValidateFn`
-        if field.ValidateFn then
-            ---@param info DarkRP.CharacterInfo
-            hook.Add("ValidateCharacterInfo", hookID, function(info)
-                if field.SetByServer then
+        ---@param info DarkRP.CharacterInfo
+        hook.Add("ValidateCharacterInfo", hookID, function(info)
+            if field.SetByServer then
+                return
+            elseif info[field.Name] == nil then
+                return false, "missing_field:" .. field.Name
+            end
+
+            if validate then
+                local allowed, reason = validate(info[field.Name], info)
+
+                if not allowed then
+                    return allowed, reason
+                end
+            end
+        end)
+
+        if field.TreatNilAs or validate then
+            ---@param char DarkRP.Character
+            ---@param key any
+            ---@param value any
+            hook.Add("CharacterCanSetField", hookID, function(char, key, value)
+                if key ~= field.Name then
                     return
-                elseif info[field.Name] == nil then
-                    return false, "missing_field:" .. field.Name
                 end
 
-                if field.ValidateFn then
-                    local status = field.ValidateFn(info[field.Name], info)
+                if field.TreatNilAs then
+                    return false, "cant_be_nil"
+                end
 
-                    if type(status) == "string" then
-                        return false, status
-                    elseif type(status) == "boolean" and not status then
-                        return false, "invalid_field:" .. field.Name
+                if validate then
+                    local allowed, reason = validate(value, char)
+
+                    if not allowed then
+                        return allowed, reason
                     end
                 end
             end)
@@ -93,7 +140,7 @@ function DarkRP.Characters.CreateFieldSimple(field)
         ---@param info DarkRP.CharacterInfo
         hook.Add("CreatePlayerCharacter", hookID, function(char, info)
             if field.SetByServer then
-                info[field.Name] = nil
+                info[field.Name] = field.DefaultValue
 
                 return
             end
@@ -143,10 +190,10 @@ function DarkRP.Characters.CreateFieldSimple(field)
         ---@param private DarkRP.Character.PrivateData
         ---@param shared DarkRP.Character.SharedData
         hook.Add("CharacterLoad", hookID, function(char, private, shared)
-            char[field.Name] = private[field.Name]
+            char[field.Name] = private[field.Name] or field.DefaultValue
 
             if field.SharedData then
-                shared[field.Name] = private[field.Name]
+                shared[field.Name] = private[field.Name] or field.DefaultValue
             end
         end)
 
@@ -167,6 +214,31 @@ function DarkRP.Characters.CreateFieldSimple(field)
                     end
                 end
             end)
+        end
+
+        if field.TreatNilAs then
+            hook.Add(
+                "CharacterOverrideField",
+                hookID,
+                ---@param char DarkRP.Character
+                ---@param key any
+                ---@param value any
+                function(char, key, value)
+                    if key ~= field.Name then
+                        return
+                    end
+
+                    if value ~= nil then
+                        return
+                    end
+
+                    if field.TreatNilAs == "default" then
+                        return field.DefaultValue or char[key]
+                    elseif field.TreatNilAs == "fallback" then
+                        return char[key] or field.DefaultValue
+                    end
+                end
+            )
         end
 
         -- Add `PLAYER:SetCharacter[field name]` wrapper that will validate
@@ -190,15 +262,8 @@ function DarkRP.Characters.CreateFieldSimple(field)
                 local success, err
                 local char = ply:GetCharacter()
 
-                if field.ValidateFn then
-                    local status = field.ValidateFn(value, char)
-
-                    if type(status) == "string" then
-                        success = false
-                        err = status
-                    elseif status == false then
-                        success = false
-                    end
+                if validate then
+                    success, err = validate(value, char)
                 end
 
                 if success ~= false and onCall then
