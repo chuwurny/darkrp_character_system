@@ -43,13 +43,7 @@ function CHARACTER:__newindex(key, value)
     if DEFAULT_FIELDS[key] then
         rawset(self, key, value)
     else
-        value = hook.Run("CharacterOverrideField", self, key, value) or value
-
-        hook.Run("CharacterFieldPreSet", self, key, value)
-
-        self._UserData[key] = value
-
-        hook.Run("CharacterFieldSet", self, key, value)
+        self:SetField(key, value)
     end
 end
 
@@ -414,4 +408,60 @@ end
 function CHARACTER:RemoveListener(ply)
     self._Receivers:RemovePlayer(ply)
     self:UnloadFor(ply)
+end
+
+--- Safely sets field value.
+---
+--- Calls "CharacterCanSetField". If value can't be set then "disallow" will be
+--- returned with error string.
+---
+--- After that "CharacterOverrideField" hook is called. If field is overridden
+--- by this hook then return status would be changed to "overridden" otherwise
+--- status will be "set"
+---
+--- Hook "CharacterFieldPreSet" will be called _before_ setting the field.
+---
+--- Hook "CharacterFieldSet" will be called _after_ setting the field.
+---
+---@return "set"|"overridden"|"disallow" status
+---@return (string|"no_reason")? err
+function CHARACTER:SetField(name, value)
+    local canChange, reason =
+        hook.Run("CharacterCanSetField", self, name, value)
+
+    if canChange == false then
+        if cvars.Bool("developer") then
+            print(
+                "Prevent setting",
+                name,
+                "for character",
+                self,
+                "because",
+                reason or "*no reason"
+            )
+        end
+
+        return "disallow", reason or "no_reason"
+    end
+
+    local overriddenValue =
+        hook.Run("CharacterOverrideField", self, name, value)
+
+    local status
+
+    if overriddenValue ~= nil then
+        status = "overridden"
+
+        value = overriddenValue
+    else
+        status = "set"
+    end
+
+    hook.Run("CharacterFieldPreSet", self, name, value)
+
+    self._UserData[name] = value
+
+    hook.Run("CharacterFieldSet", self, name, value)
+
+    return status
 end
