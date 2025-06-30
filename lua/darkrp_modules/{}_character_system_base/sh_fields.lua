@@ -3,8 +3,12 @@ DarkRP.Characters = DarkRP.Characters or {}
 
 ---@class DarkRP.Characters.SimpleField.DarkRPVar
 ---@field Name string? Variable name
----@field WriteFn fun(v: any) Write function
----@field ReadFn fun(): any Read function
+---
+--- Write function. If `nil` then will use existing DarkRP var
+---@field WriteFn fun(v: any)?
+---
+--- Read function. If `nil` then will use existing DarkRP var
+---@field ReadFn (fun(): any)?
 ---
 --- (Default: `false`) Field won't use DarkRP var to save this field
 ---@field NotForSave boolean?
@@ -260,7 +264,11 @@ function DarkRP.Characters.CreateFieldSimple(field)
     end
 
     -- Register DarkRP var
-    if field.DarkRPVar then
+    if
+        field.DarkRPVar
+        and field.DarkRPVar.WriteFn
+        and field.DarkRPVar.ReadFn
+    then
         DarkRP.registerDarkRPVar(
             field.DarkRPVar.Name,
             field.DarkRPVar.WriteFn,
