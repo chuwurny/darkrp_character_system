@@ -46,6 +46,8 @@ DarkRP.Characters = DarkRP.Characters or {}
 --- Wrapper to create field in character
 ---@param field DarkRP.Characters.SimpleField
 function DarkRP.Characters.CreateFieldSimple(field)
+    local IGNORE_DARKRP_VAR_CHANGE = false
+
     local hookID = "DarkRPCharacters_SimpleField" .. field.Name
 
     --- preprocess field
@@ -155,7 +157,9 @@ function DarkRP.Characters.CreateFieldSimple(field)
                     end
 
                     if field.DarkRPVar and char:IsActive() then
+                        IGNORE_DARKRP_VAR_CHANGE = true
                         char.Player:setDarkRPVar(field.DarkRPVar.Name, value)
+                        IGNORE_DARKRP_VAR_CHANGE = false
                     end
                 end
             end)
@@ -209,8 +213,31 @@ function DarkRP.Characters.CreateFieldSimple(field)
         -- Set DarkRP var to nil after player is left character
         if field.DarkRPVar then
             hook.Add("PlayerLeftCharacter", hookID, function(char)
+                IGNORE_DARKRP_VAR_CHANGE = true
                 char.Player:setDarkRPVar(field.DarkRPVar.Name, nil)
+                IGNORE_DARKRP_VAR_CHANGE = false
             end)
+
+            if not field.DarkRPVar.NotForSave then
+                ---@param ply Player
+                ---@param var string
+                ---@param new any
+                hook.Add("DarkRPVarChanged", hookID, function(ply, var, _, new)
+                    if IGNORE_DARKRP_VAR_CHANGE then
+                        return
+                    end
+
+                    if var ~= field.DarkRPVar.Name then
+                        return
+                    end
+
+                    if not ply:IsEnteredCharacter() then
+                        return
+                    end
+
+                    ply:GetCharacter()[field.Name] = new
+                end)
+            end
         end
     else -- CLIENT
         -- Update field directly in `DarkRP.Character`
