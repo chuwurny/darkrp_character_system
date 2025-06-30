@@ -1,4 +1,4 @@
-DarkRP.Characters.DATABASE_VERSION = 2
+DarkRP.Characters.DATABASE_VERSION = 3
 
 local MIGRATE_VERSION = {
     -- Add "dead" column
@@ -11,6 +11,90 @@ local MIGRATE_VERSION = {
                     or "INTEGER CHECK(dead IN (0, 1))"
             ),
             next,
+            DarkRP.Characters._TraceAsyncError()
+        )
+    end,
+
+    -- Remove "name" column"
+    [3] = function(next)
+        local function dropName()
+            if MySQLite.isMySQL() then
+                MySQLite.query(
+                    "ALTER TABLE darkrp_characters DROP COLUMN name",
+                    next,
+                    DarkRP.Characters._TraceAsyncError()
+                )
+            else
+                -- SQLite doesn't support `ALTER TABLE ... DROP COLUMN`
+                -- throwing syntax error
+                --
+                -- P.S. https://stackoverflow.com/a/21019278
+                --
+                -- TODO: copy the whole table?
+
+                next()
+            end
+        end
+
+        MySQLite.query(
+            "SELECT id, name, data FROM darkrp_characters",
+            function(rows)
+                if not rows then
+                    return
+                end
+
+                local leftToAlter = #rows
+
+                local function tryDropName()
+                    leftToAlter = leftToAlter - 1
+
+                    if leftToAlter == 0 then
+                        dropName()
+                    end
+                end
+
+                for _, cols in ipairs(rows) do
+                    local data = util.JSONToTable(cols.data)
+
+                    print(
+                        string.format(
+                            "[DarkRP Characters] Migrating character %s",
+                            cols.id
+                        )
+                    )
+
+                    if not data then
+                        ErrorNoHalt(
+                            string.format(
+                                "Failed to migrate character %s: can't parse/corrupted data",
+                                cols.id
+                            )
+                        )
+
+                        tryDropName()
+                    else
+                        data.PrivateData = data.PrivateData or {}
+                        data.PrivateData.Name = cols.name
+
+                        local updateErrHandler =
+                            DarkRP.Characters._TraceAsyncError()
+
+                        MySQLite.query(
+                            string.format(
+                                "UPDATE darkrp_characters SET data=%s WHERE id=%d",
+                                MySQLite.SQLStr(util.TableToJSON(data)),
+                                cols.id
+                            ),
+                            tryDropName,
+                            function(err)
+                                tryDropName()
+
+                                updateErrHandler(err)
+                            end
+                        )
+                    end
+                end
+            end,
             DarkRP.Characters._TraceAsyncError()
         )
     end,

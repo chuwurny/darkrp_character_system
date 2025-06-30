@@ -28,7 +28,6 @@ net.Receive("DarkRPSyncCharacter", function()
             char.ID = id
         end
 
-        char.Name = net.ReadString()
         char.LastAccessTime = net.ReadUInt(32)
         char.Health = net.ReadUInt(32)
         char.Armor = net.ReadUInt(32)

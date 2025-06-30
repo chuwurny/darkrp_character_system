@@ -16,7 +16,6 @@ DarkRP.Characters = DarkRP.Characters or {}
 ---@field Ammo { [integer]: integer }?
 
 ---@class DarkRP.CharacterInfo
----@field Name string Last saved character rp name
 
 ---@class DarkRP.Character : DarkRP.CharacterInfo
 ---@field ID integer? ID in database. If this is `nil` then character is not
@@ -50,8 +49,7 @@ CHARACTER.__index = CHARACTER
 
 function CHARACTER:__tostring()
     return string.format(
-        "Char(%s)[%s,%s]",
-        self.Name,
+        "Char(%s)[%s]",
         self.ID or "invalid",
         tostring(self.Player)
     )

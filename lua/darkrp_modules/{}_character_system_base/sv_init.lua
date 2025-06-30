@@ -23,7 +23,6 @@ function DarkRP.Characters.LoadFromRow(cols, steamID)
     ---@type DarkRP.Character
     local char = DarkRP.Characters.New(plyOrSteamID --[[@as Player|string]])
 
-    char.Name = cols.name
 
     char.Armor = tonumber(cols.armor) --[[@as integer]]
     char.Health = tonumber(cols.health) --[[@as integer]]
@@ -78,7 +77,6 @@ function DarkRP.Characters.LoadByID(charID, callback)
         string.format(
             [[SELECT
                   id, steamid,
-                  name,
                   last_access_time,
                   health, armor,
                   dead,
@@ -223,11 +221,11 @@ end
 --- this field will be character ID.
 ---
 --- `err` argument will be set only if `force` is *not* set to `false`.
----@param callback fun(err: ("long_name"|"no_reason"|string)?, char: nil)
+---@param callback fun(err: ("no_reason"|string)?, char: nil)
 ---
 ---@param force boolean? (Default: false) Ignore checks
 ---@param doLoad boolean? (Default: false) Loads character after loading
----@overload fun(steamID: string, info: DarkRP.CharacterInfo, onCreated: fun(char: DarkRP.Character)?, callback: fun(err: ("long_name"|"no_reason"|string)?, char: DarkRP.Character), force: boolean?, doLoad: true)
+---@overload fun(steamID: string, info: DarkRP.CharacterInfo, onCreated: fun(char: DarkRP.Character)?, callback: fun(err: ("no_reason"|string)?, char: DarkRP.Character), force: boolean?, doLoad: true)
 ---@overload fun(steamID: string, info: DarkRP.CharacterInfo, onCreated: fun(char: DarkRP.Character)?, callback: fun(err: nil, char: DarkRP.Character), force: true, doLoad: true)
 ---@overload fun(steamID: string, info: DarkRP.CharacterInfo, onCreated: fun(char: DarkRP.Character)?, callback: fun(err: nil, charId: integer), force: true, doLoad: boolean?)
 function DarkRP.Characters.Create(
@@ -239,14 +237,6 @@ function DarkRP.Characters.Create(
     doLoad
 )
     if not force then
-        if
-            utf8.len(info.Name)
-            ---@diagnostic disable-next-line: undefined-field
-            > (GAMEMODE.Config.CharacterMaxNameLength or 32)
-        then
-            return callback("long_name", nil)
-        end
-
         local valid, reason = hook.Run("ValidateCharacterInfo", info)
 
         if valid == false then
@@ -258,7 +248,6 @@ function DarkRP.Characters.Create(
         player.GetBySteamID(steamID) --[[@as Player?]]
             or steamID
     )
-    char.Name = info.Name
 
     -- hypothetically speaking character is just being born :trollface:
     char.Dead = true

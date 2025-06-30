@@ -138,7 +138,6 @@ function PLAYER:EnterCharacter(char, force)
         end
     end
 
-    self:setDarkRPVar("rpname", char.Name)
     self:setDarkRPVar("CharacterID", char.ID)
 
     hook.Run("CharacterRestore", char, char.PrivateData)
@@ -196,14 +195,4 @@ function PLAYER:LeaveCharacter(force)
     hook.Run("PlayerLeftCharacter", self, char)
 
     return true
-end
-
---- Helper function to modify rp name and sync it with player.
----@param newName string
-function PLAYER:SetCharacterName(newName)
-    assert(self:IsEnteredCharacter(), "Enter character first")
-
-    self:setDarkRPVar("rpname", newName)
-    self:GetCharacter().Name = newName
-    self:GetCharacter():Sync("info")
 end

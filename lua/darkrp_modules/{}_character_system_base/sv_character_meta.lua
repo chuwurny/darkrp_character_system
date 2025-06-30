@@ -27,7 +27,6 @@ local DEFAULT_FIELDS = {
     ["ID"] = true,
     ["Player"] = true,
     ["LastAccessTime"] = true,
-    ["Name"] = true,
     ["Health"] = true,
     ["Armor"] = true,
     ["Dead"] = true,
@@ -78,7 +77,6 @@ function CHARACTER:Sync(fields, receivers)
 
     if syncInfo then
         net.WriteUInt64(util.SteamIDTo64(self.SteamID))
-        net.WriteString(self.Name)
         net.WriteUInt(self.LastAccessTime, 32)
         net.WriteUInt(self.Health, 32)
         net.WriteUInt(self.Armor, 32)
@@ -239,11 +237,10 @@ function CHARACTER:Save(callback)
             MySQLite.query(
                 string.format(
                     [[INSERT INTO darkrp_characters
-                      (steamid, name, health, armor, dead, data)
-                      VALUES(%s, %s, %d, %d, %d, %s);
+                      (steamid, health, armor, dead, data)
+                      VALUES(%s, %d, %d, %d, %s);
                       SELECT LAST_INSERT_ROWID() AS id;]],
                     MySQLite.SQLStr(self.SteamID),
-                    MySQLite.SQLStr(self.Name),
                     self.Health,
                     self.Armor,
                     self.Dead and 1 or 0,
@@ -276,12 +273,10 @@ function CHARACTER:Save(callback)
             MySQLite.query(
                 string.format(
                     [[UPDATE darkrp_characters
-                      SET name = %s,
-                          health = %d, armor = %d,
+                      SET health = %d, armor = %d,
                           dead = %d,
                           data = %s
                       WHERE id = %d]],
-                    MySQLite.SQLStr(self.Name),
                     self.Health,
                     self.Armor,
                     self.Dead and 1 or 0,
