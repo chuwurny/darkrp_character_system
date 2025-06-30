@@ -207,7 +207,6 @@ function DarkRP.Characters.CreateFieldSimple(field)
 
                 if success ~= false then
                     char[field.Name] = value
-                    char.PrivateData[field.Name] = value
                 end
 
                 return success ~= false, err
