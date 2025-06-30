@@ -307,6 +307,14 @@ function DarkRP.Characters.CreateFieldSimple(field)
                     ply:GetCharacter()[field.Name] = new
                 end)
             end
+
+            ---@param char DarkRP.Character
+            hook.Add("CharacterRestore", hookID, function(char)
+                char.Player:setDarkRPVar(
+                    field.DarkRPVar.Name,
+                    char[field.Name] or field.DefaultValue
+                )
+            end)
         end
     else -- CLIENT
         -- Update field directly in `DarkRP.Character`
