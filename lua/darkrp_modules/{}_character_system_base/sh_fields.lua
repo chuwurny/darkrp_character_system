@@ -215,9 +215,10 @@ function DarkRP.Characters.CreateFieldSimple(field)
 
         -- Set DarkRP var to nil after player is left character
         if field.DarkRPVar then
-            hook.Add("PlayerLeftCharacter", hookID, function(char)
+            ---@param ply Player
+            hook.Add("PlayerLeftCharacter", hookID, function(ply)
                 IGNORE_DARKRP_VAR_CHANGE = true
-                char.Player:setDarkRPVar(field.DarkRPVar.Name, nil)
+                ply:setDarkRPVar(field.DarkRPVar.Name, nil)
                 IGNORE_DARKRP_VAR_CHANGE = false
             end)
 
