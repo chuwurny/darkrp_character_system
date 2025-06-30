@@ -28,3 +28,14 @@ GM.Config.DontSaveCharacterWeapons = {
     --["weapon_fists"] = true,
 }
 ```
+
+## Disabling default implementation
+
+To disable default field implementations use `GM.Config.DisabledCustomModules`
+([darkrp modification code](https://github.com/FPtje/darkrpmodification/blob/407fc8bfa4d0828ea3d0d48dabc601e6d5eb5695/lua/darkrp_config/settings.lua#L349))
+
+Modules that you can disable:
+
+- `char_sys_base_money`: Saves player's money ("money" var)
+
+- `char_sys_base_rpname`: Saves player's RP name ("rpname" var)
