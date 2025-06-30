@@ -56,13 +56,12 @@ net.Receive("DarkRPEnterCharacter", function(_, ply)
     local charID = net.ReadUInt(32)
 
     if ply:IsEnteredCharacter() then
-        if
             ---@diagnostic disable-next-line: undefined-field
-            GAMEMODE.Config.AllowQuickCharacterEnter
-            and not ply:LeaveCharacter()
-        then
+        if not GAMEMODE.Config.AllowQuickCharacterEnter then
             return
         end
+
+        ply:LeaveCharacter()
     end
 
     local _, err = ply:EnterCharacter(charID)
