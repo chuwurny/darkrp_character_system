@@ -23,6 +23,15 @@ function DarkRP.Characters.LoadFromRow(cols, steamID)
     ---@type DarkRP.Character
     local char = DarkRP.Characters.New(plyOrSteamID --[[@as Player|string]])
 
+    if cvars.Bool("developer") then
+        print(
+            string.format(
+                "Loaded character %s as %s",
+                cols.id,
+                char:IsOffline() and "offline" or "online"
+            )
+        )
+    end
 
     char.Armor = tonumber(cols.armor) --[[@as integer]]
     char.Health = tonumber(cols.health) --[[@as integer]]

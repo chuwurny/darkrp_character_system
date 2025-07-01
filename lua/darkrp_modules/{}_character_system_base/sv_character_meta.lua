@@ -360,6 +360,19 @@ end
 ---@param value any
 ---@param addToPrivateData boolean?
 function CHARACTER:SetData(key, value, addToPrivateData)
+    if cvars.Bool("developer") then
+        print(
+            string.format(
+                "%s set data %s to %s",
+                self,
+                tostring(key),
+                tostring(value)
+            )
+        )
+
+        debug.Trace()
+    end
+
     self.SharedData[key] = value
 
     if addToPrivateData then
