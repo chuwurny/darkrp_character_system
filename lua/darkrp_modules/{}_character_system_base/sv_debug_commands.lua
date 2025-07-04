@@ -28,3 +28,24 @@ concommand.Add("darkrp_drop_chars", function(ply)
 
     print("Characters has been dropped!")
 end)
+
+concommand.Add("darkrp_chars_migrate", function(ply, cmd, args)
+    if IsValid(ply) then
+        return
+    end
+
+    local version = tonumber(args[1] or "")
+
+    if not version then
+        return print(string.format("%s [version]", cmd))
+    end
+
+    MySQLite.query(
+        string.format(
+            "REPLACE INTO darkrp_chars_db_state VALUES('version', %d)",
+            version - 1
+        ),
+        hook.GetTable().DatabaseInitialized.DarkRPCharacters_InitDB,
+        DarkRP.Characters._TraceAsyncError()
+    )
+end)
