@@ -1,4 +1,4 @@
-DarkRP.Characters.DATABASE_VERSION = 3
+DarkRP.Characters.DATABASE_VERSION = 4
 
 local MIGRATE_VERSION = {
     -- Add "dead" column
@@ -29,8 +29,7 @@ local MIGRATE_VERSION = {
                 -- throwing syntax error
                 --
                 -- P.S. https://stackoverflow.com/a/21019278
-                --
-                -- TODO: copy the whole table?
+                -- P.P.S. fixed in database version 4
 
                 next()
             end
@@ -95,6 +94,40 @@ local MIGRATE_VERSION = {
                     end
                 end
             end,
+            DarkRP.Characters._TraceAsyncError()
+        )
+    end,
+
+    -- (SQLite migration)
+    --
+    -- "Drop" "name" SQLite column by creating a new table
+    --
+    -- Character not being created because we're not inserting "name" column. To
+    -- fix this issue without writing spaghetti code we just create a whole new
+    -- table!
+    [4] = function(next)
+        if MySQLite.isMySQL() then
+            return next()
+        end
+
+        MySQLite.query(
+            [[BEGIN TRANSACTION;
+              CREATE TABLE darkrp_characters_v4(
+                  id INTEGER NOT NULL PRIMARY KEY,
+                  steamid VARCHAR(32) NOT NULL,
+                  last_access_time INTEGER NOT NULL DEFAULT 0,
+                  health INTEGER NOT NULL,
+                  armor INTEGER NOT NULL,
+                  data TEXT NOT NULL DEFAULT "{}"
+              );
+              INSERT INTO darkrp_characters_v4
+                  (id, steamid, last_access_time, health, armor, data)
+                  SELECT id, steamid, last_access_time, health, armor, data
+                      FROM darkrp_characters;
+              DROP TABLE darkrp_characters;
+              ALTER TABLE darkrp_characters_v4 RENAME TO darkrp_characters;
+              COMMIT;]],
+            next,
             DarkRP.Characters._TraceAsyncError()
         )
     end,
