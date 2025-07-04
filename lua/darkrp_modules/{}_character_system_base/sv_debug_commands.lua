@@ -20,7 +20,8 @@ concommand.Add("darkrp_drop_chars", function(ply)
 
     MySQLite.query(
         [[DROP TABLE darkrp_characters;
-          DROP TABLE darkrp_chars_pos;]],
+          DROP TABLE darkrp_chars_pos;
+          DROP TABLE darkrp_chars_db_state;]],
         nil,
         DarkRP.Characters._TraceAsyncError()
     )
