@@ -111,22 +111,27 @@ local MIGRATE_VERSION = {
         end
 
         MySQLite.query(
-            [[BEGIN TRANSACTION;
-              CREATE TABLE darkrp_characters_v4(
-                  id INTEGER NOT NULL PRIMARY KEY,
-                  steamid VARCHAR(32) NOT NULL,
-                  last_access_time INTEGER NOT NULL DEFAULT 0,
-                  health INTEGER NOT NULL,
-                  armor INTEGER NOT NULL,
-                  data TEXT NOT NULL DEFAULT "{}"
-              );
-              INSERT INTO darkrp_characters_v4
-                  (id, steamid, last_access_time, health, armor, data)
-                  SELECT id, steamid, last_access_time, health, armor, data
-                      FROM darkrp_characters;
-              DROP TABLE darkrp_characters;
-              ALTER TABLE darkrp_characters_v4 RENAME TO darkrp_characters;
-              COMMIT;]],
+            string.format(
+                [[BEGIN TRANSACTION;
+                  CREATE TABLE darkrp_characters_v4(
+                      id INTEGER NOT NULL PRIMARY KEY,
+                      steamid VARCHAR(32) NOT NULL,
+                      last_access_time INTEGER NOT NULL DEFAULT 0,
+                      health INTEGER NOT NULL,
+                      armor INTEGER NOT NULL,
+                      data TEXT NOT NULL DEFAULT "{}",
+                      dead %s NOT NULL DEFAULT 0
+                  );
+                  INSERT INTO darkrp_characters_v4
+                      (id, steamid, last_access_time, health, armor, data)
+                      SELECT id, steamid, last_access_time, health, armor, data
+                          FROM darkrp_characters;
+                  DROP TABLE darkrp_characters;
+                  ALTER TABLE darkrp_characters_v4 RENAME TO darkrp_characters;
+                  COMMIT;]],
+                MySQLite.isMySQL() and "ENUM(0, 1)"
+                    or "INTEGER CHECK(dead IN (0, 1))"
+            ),
             next,
             DarkRP.Characters._TraceAsyncError()
         )
