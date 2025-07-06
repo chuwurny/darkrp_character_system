@@ -277,9 +277,5 @@ function DarkRP.Characters.Create(
         end
     end
 
-    if not char.Temporary then
-        char:Save(loadChar)
-    else
-        loadChar()
-    end
+    char:Save(loadChar)
 end
