@@ -290,7 +290,7 @@ local function overridePlayerSpawn()
         if ply._EnteredCharacter then
             hook.Run("CharacterPostPlayerSpawn", char)
 
-            do
+            if GAMEMODE.Config.CharacterSpawnsOnLastPos ~= false then
                 local pos = char.Pos
                 pos = hook.Run("CharacterOverrideSpawnPos", char, pos) or pos
 

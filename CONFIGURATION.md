@@ -27,6 +27,11 @@ GM.Config.DontSaveCharacterWeapons = {
     --["weapon_physgun"] = true,
     --["weapon_fists"] = true,
 }
+
+-- Respawn character on the same position as the last time
+--
+-- NOTE: disabling it will stop saving character position!
+GM.Config.CharacterSpawnsOnLastPos = true
 ```
 
 ## Disabling default implementation

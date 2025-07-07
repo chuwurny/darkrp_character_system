@@ -91,7 +91,7 @@ end
 function CHARACTER:SavePos(callback)
     self:EnsureInDatabase()
 
-    if self.Temporary then
+    if self.Temporary or GAMEMODE.Config.CharacterSpawnsOnLastPos == false then
         if callback then
             callback(self)
         end
@@ -128,7 +128,7 @@ function CHARACTER:DeletePos(callback)
 
     self.Pos = nil
 
-    if self.Temporary then
+    if self.Temporary or GAMEMODE.Config.CharacterSpawnsOnLastPos == false then
         if callback then
             callback(self)
         end
