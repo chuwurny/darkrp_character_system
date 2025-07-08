@@ -153,8 +153,6 @@ end
 function CHARACTER:Save(callback)
     hook.Run("CharacterPreSave", self)
 
-    self.LastAccessTime = os.time(os.date("!*t") --[[@as osdate]])
-
     if not self:IsOffline() then
         if self.Player:Alive() then
             self.Pos = self.Player:GetPos()
