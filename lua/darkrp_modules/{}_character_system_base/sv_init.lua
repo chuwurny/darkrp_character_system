@@ -202,7 +202,7 @@ function DarkRP.Characters.ListAll(offset, amount, callback)
 
         for _, cols in ipairs(rows) do
             cols.SteamID = cols.steamid
-            cols.ID = cols.id
+            cols.ID = tonumber(cols.id)
 
             cols.steamid = nil
             cols.id = nil
