@@ -138,7 +138,7 @@ function DarkRP.Characters.CreateFieldSimple(field)
         ---
         ---@param char DarkRP.Character
         ---@param info DarkRP.CharacterInfo
-        hook.Add("CreatePlayerCharacter", hookID, function(char, info)
+        hook.Add("CreateCharacter", hookID, function(char, info)
             if field.SetByServer then
                 info[field.Name] = field.DefaultValue
 

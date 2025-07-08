@@ -10,8 +10,8 @@ local PLAYER = FindMetaTable("Player")
 --- After character is created hook "PlayerCreatedCharacter" is called. After
 --- this hook character is being saved and synced between this player.
 ---
---- Use hook "CreatePlayerCharacter" to modify new character before passing it
---- into "PlayerCreatedCharacter" hook.
+--- Use hook "CreateCharacter" to modify new character before passing it into
+--- "CharacterCreated" hook.
 ---
 ---@param info DarkRP.CharacterInfo
 ---@param callback fun(err: string?, char: DarkRP.Character?)
@@ -39,6 +39,11 @@ function PLAYER:CreateCharacter(info, callback, temporary, force)
     DarkRP.Characters.Create(self:SteamID(), info, function(char)
         char.Temporary = temporary == true
 
+        -- TODO: remove these hook calls. They're deprecated.
+        --
+        -- HACK: these hooks are still here for the backwards compatibility.
+        --
+        -- Use "CreateCharacter" and "CharacterCreated" hooks instead!
         hook.Run("CreatePlayerCharacter", char, info)
         hook.Run("PlayerCreatedCharacter", char)
     end, callback, force, true)

@@ -219,6 +219,11 @@ end
 --- Calls "ValidateCharacterInfo" hook before creating character to validate
 --- @info. Hook won't be called if @force is set to `true`.
 ---
+--- After that "CreateCharacter" hook is called. This is good place to modify
+--- character and set proper info directly to character.
+---
+--- After that @onCreated and hook "CharacterCreated" are called.
+---
 ---@param steamID string In STEAM_X:Y:ZZZZZZ format
 ---@param info DarkRP.CharacterInfo
 ---
@@ -261,9 +266,13 @@ function DarkRP.Characters.Create(
     -- hypothetically speaking character is just being born :trollface:
     char.Dead = true
 
+    hook.Run("CreateCharacter", char, info)
+
     if onCreated then
         onCreated(char)
     end
+
+    hook.Run("CharacterCreated", char)
 
     local function loadChar()
         if doLoad then
