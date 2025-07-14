@@ -35,6 +35,9 @@ GM.Config.CharacterSpawnsOnLastPos = true
 
 -- Restore last character's health
 GM.Config.CharacterRestoreLastHealth = true
+
+-- Restore last character's armor
+GM.Config.CharacterRestoreLastArmor = true
 ```
 
 ## Disabling default implementation

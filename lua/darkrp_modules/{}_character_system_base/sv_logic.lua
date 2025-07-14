@@ -306,7 +306,7 @@ local function overridePlayerSpawn()
                 ply:SetHealth(hp)
             end
 
-            do
+            if GAMEMODE.Config.CharacterRestoreLastArmor ~= false then
                 local ar = char.Armor
                 ar = hook.Run("CharacterOverrideArmor", char, ar) or ar
 
