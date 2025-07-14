@@ -32,6 +32,9 @@ GM.Config.DontSaveCharacterWeapons = {
 --
 -- NOTE: disabling it will stop saving character position!
 GM.Config.CharacterSpawnsOnLastPos = true
+
+-- Restore last character's health
+GM.Config.CharacterRestoreLastHealth = true
 ```
 
 ## Disabling default implementation

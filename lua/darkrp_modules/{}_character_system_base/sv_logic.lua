@@ -299,7 +299,7 @@ local function overridePlayerSpawn()
                 end
             end
 
-            do
+            if GAMEMODE.Config.CharacterRestoreLastHealth ~= false then
                 local hp = char.Health
                 hp = hook.Run("CharacterOverrideHealth", char, hp) or hp
 
