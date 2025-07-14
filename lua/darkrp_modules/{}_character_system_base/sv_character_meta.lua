@@ -229,13 +229,14 @@ function CHARACTER:Save(callback)
             MySQLite.query(
                 string.format(
                     [[INSERT INTO darkrp_characters
-                      (steamid, health, armor, dead, data)
+                      (steamid, health, armor, dead, last_access_time, data)
                       VALUES(%s, %d, %d, %d, %s);
                       SELECT LAST_INSERT_ROWID() AS id;]],
                     MySQLite.SQLStr(self.SteamID),
                     self.Health,
                     self.Armor,
                     self.Dead and 1 or 0,
+                    self.LastAccessTime,
                     MySQLite.SQLStr(util.TableToJSON({
                         PrivateData = self.PrivateData,
                     }))
