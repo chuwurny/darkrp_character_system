@@ -230,7 +230,7 @@ function CHARACTER:Save(callback)
                 string.format(
                     [[INSERT INTO darkrp_characters
                       (steamid, health, armor, dead, last_access_time, data)
-                      VALUES(%s, %d, %d, %d, %s);
+                      VALUES(%s, %d, %d, %d, %d, %s);
                       SELECT LAST_INSERT_ROWID() AS id;]],
                     MySQLite.SQLStr(self.SteamID),
                     self.Health,
