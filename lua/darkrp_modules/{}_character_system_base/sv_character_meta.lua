@@ -166,7 +166,10 @@ function CHARACTER:Save(callback)
             self.Dead = true
         end
 
-        if self.Dead then
+        if
+            self.Dead
+            or GAMEMODE.Config.CharacterRestoreLastWeapons == false
+        then
             self.PrivateData.Weapons = nil
             self.PrivateData.Ammo = nil
         else
