@@ -270,11 +270,13 @@ function CHARACTER:Save(callback)
                 string.format(
                     [[UPDATE darkrp_characters
                       SET health = %d, armor = %d,
+                          last_access_time = %d,
                           dead = %d,
                           data = %s
                       WHERE id = %d]],
                     self.Health,
                     self.Armor,
+                    self.LastAccessTime,
                     self.Dead and 1 or 0,
                     MySQLite.SQLStr(util.TableToJSON({
                         PrivateData = self.PrivateData,
