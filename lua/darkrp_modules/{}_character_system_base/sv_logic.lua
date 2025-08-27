@@ -313,7 +313,10 @@ local function overridePlayerSpawn()
                 ply:SetArmor(ar)
             end
 
-            if not char.Dead then
+            if
+                not char.Dead
+                and GAMEMODE.Config.CharacterRestoreLastWeapons ~= false
+            then
                 ply:RemoveAllItems()
 
                 if char.PrivateData.Weapons then
