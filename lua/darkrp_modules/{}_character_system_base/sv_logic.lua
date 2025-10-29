@@ -341,7 +341,7 @@ local function overridePlayerSpawn()
                 end
             end
 
-            char.LastAccessTime = os.time(os.date("!*t") --[[@as osdate]])
+            char.LastAccessTime = os.time()
             char.Dead = false
             char:Sync("info")
 
