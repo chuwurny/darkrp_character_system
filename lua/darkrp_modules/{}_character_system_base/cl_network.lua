@@ -66,14 +66,18 @@ net.Receive("DarkRPSyncCharacterData", function()
     local char = DarkRP.Characters.Loaded[id]
 
     if not char then
-        error(
-            string.format(
-                "Bug: got character (%d) data update (%s = %s), but no character is loaded!",
-                id,
-                tostring(key),
-                tostring(value)
+        if cvars.Bool("developer") then
+            error(
+                string.format(
+                    "Bug: got character (%d) data update (%s = %s), but no character is loaded!",
+                    id,
+                    tostring(key),
+                    tostring(value)
+                )
             )
-        )
+        else
+            return
+        end
     end
 
     local oValue = char.SharedData[key]
